@@ -1,0 +1,5 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://www.wolvesint.ae/sitemap.xml
+Sitemap: https://www.wolvesint.ae/sitemaps/index-wolvesint.ae.xml

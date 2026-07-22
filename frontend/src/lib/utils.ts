@@ -25,7 +25,15 @@ export function truncate(str: string, length: number): string {
 export function getMediaUrl(path: string | null | undefined): string {
   if (!path) return '/images/placeholder.jpg';
   if (path.startsWith('http')) return path;
-  return `${process.env.NEXT_PUBLIC_MEDIA_BASE}${path}`;
+  const base = process.env.NEXT_PUBLIC_MEDIA_BASE || '';
+  if (base.includes('cloudinary.com')) {
+    return `${base}/image/upload/${path}`;
+  }
+  if (base.includes('localhost:8000')) {
+    return `${base}/media/${path}`;
+  }
+  // Vercel: images served from public/media/
+  return `/media/${path}`;
 }
 
 export function buildWhatsAppUrl(phone: string, message?: string): string {
