@@ -25,7 +25,7 @@ export function truncate(str: string, length: number): string {
 export function getMediaUrl(path: string | null | undefined): string {
   if (!path) return '/images/placeholder.jpg';
   if (path.startsWith('http')) return path;
-  return `${process.env.NEXT_PUBLIC_MEDIA_URL}${path}`;
+  return `${process.env.NEXT_PUBLIC_MEDIA_BASE}${path}`;
 }
 
 export function buildWhatsAppUrl(phone: string, message?: string): string {
