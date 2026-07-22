@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://api.yourdomain.com/api/v1",
+    "NEXT_PUBLIC_MEDIA_URL": "https://api.yourdomain.com",
+    "NEXT_PUBLIC_SITE_URL": "https://yourdomain.com",
+    "NEXT_PUBLIC_PHONE": "+97142345678",
+    "NEXT_PUBLIC_WHATSAPP": "971501234567"
+  }
+}

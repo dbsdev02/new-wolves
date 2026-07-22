@@ -1,0 +1,310 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ink: #0D0D0D;
+    --ink-soft: #1C1C1C;
+    --ink-muted: #2E2E2E;
+    --cream: #FAF8F4;
+    --cream-dark: #F2EFE9;
+    --white: #FFFFFF;
+
+    --gold: #C9A84C;
+    --gold-soft: #E2C97E;
+    --gold-deep: #A07830;
+    --gold-pale: #F5EDD6;
+
+    --border: #E8E4DC;
+    --muted: #8A8680;
+
+    /* Tailwind-compatible aliases */
+    --background: #FFFFFF;
+    --foreground: #0D0D0D;
+    --muted-foreground: #8A8680;
+    --card: #FFFFFF;
+    --card-foreground: #0D0D0D;
+    --popover: #FFFFFF;
+    --popover-foreground: #0D0D0D;
+    --primary: #A07830;
+    --primary-foreground: #FFFFFF;
+    --secondary: #FAF8F4;
+    --secondary-foreground: #0D0D0D;
+    --accent: #F2EFE9;
+    --accent-foreground: #0D0D0D;
+    --destructive: #ef4444;
+    --destructive-foreground: #FFFFFF;
+    --input: #E8E4DC;
+    --ring: #C9A84C;
+    --radius: 0rem;
+  }
+
+  /* Tailwind-compatible aliases */
+  --background: var(--white);
+  --foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --card: var(--white);
+  --card-foreground: var(--ink);
+  --popover: var(--white);
+  --popover-foreground: var(--ink);
+  --primary: var(--gold-deep);
+  --primary-foreground: var(--white);
+  --secondary: var(--cream);
+  --secondary-foreground: var(--ink);
+  --accent: var(--cream-dark);
+  --accent-foreground: var(--ink);
+  --destructive: #ef4444;
+  --destructive-foreground: var(--white);
+  --input: var(--border);
+  --ring: var(--gold);
+  --radius: 0rem;
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+  body {
+    background: var(--background);
+    color: var(--ink);
+    font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-cormorant), Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  ::selection { background: rgba(201, 168, 76, 0.25); }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--cream); }
+  ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+}
+
+@layer components {
+
+  /* ── Buttons ── */
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 text-white font-semibold text-[0.7rem] tracking-[0.2em] uppercase rounded-none;
+    background: var(--gold-deep);
+    transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 20px rgba(160, 120, 48, 0.25);
+  }
+  .btn-gold:hover {
+    background: var(--gold);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 30px rgba(160, 120, 48, 0.35);
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 font-medium text-[0.7rem] tracking-[0.2em] uppercase rounded-none border transition-all duration-300;
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .btn-outline:hover {
+    background: var(--ink);
+    color: var(--white);
+  }
+
+  .btn-outline-gold {
+    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 font-medium text-[0.7rem] tracking-[0.2em] uppercase rounded-none border transition-all duration-300;
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .btn-outline-gold:hover {
+    background: var(--gold);
+    color: var(--white);
+  }
+
+  .btn-ghost-light {
+    @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 font-medium text-[0.7rem] tracking-[0.2em] uppercase rounded-none border transition-all duration-300;
+    border-color: rgba(255,255,255,0.3);
+    color: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(8px);
+  }
+  .btn-ghost-light:hover {
+    border-color: var(--gold);
+    color: var(--gold-soft);
+    background: rgba(255,255,255,0.08);
+  }
+
+  /* ── Layout ── */
+  .container-luxe {
+    @apply w-full mx-auto px-6 sm:px-8 lg:px-16;
+    max-width: 1440px;
+  }
+
+  /* ── Typography ── */
+  .eyebrow {
+    font-family: var(--font-manrope), sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold-deep);
+  }
+
+  .section-heading {
+    font-family: var(--font-cormorant), Georgia, serif;
+    font-size: clamp(2.25rem, 4vw, 3.5rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--ink);
+  }
+
+  .section-heading-light {
+    font-family: var(--font-cormorant), Georgia, serif;
+    font-size: clamp(2.25rem, 4vw, 3.5rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--white);
+  }
+
+  /* Legacy aliases */
+  .section-title { @apply section-heading; }
+  .section-subtitle { @apply eyebrow; }
+  .serif { font-family: var(--font-cormorant), Georgia, serif; font-weight: 400; }
+
+  /* ── Gold accent line ── */
+  .gold-rule {
+    display: block;
+    width: 40px;
+    height: 2px;
+    background: var(--gold);
+    margin-top: 1.25rem;
+  }
+
+  .divider-gold { @apply block w-10 h-0.5 bg-gold mt-5; }
+
+  /* ── Section header block ── */
+  .section-header {
+    @apply flex flex-col md:flex-row md:items-end justify-between gap-8 mb-14;
+  }
+
+  /* ── Cards ── */
+  .card-base {
+    @apply bg-white border overflow-hidden transition-all duration-500;
+    border-color: var(--border);
+  }
+  .card-base:hover {
+    border-color: var(--gold);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+  }
+
+  /* ── Inputs ── */
+  .input-luxury {
+    @apply w-full bg-transparent border-b py-3 text-sm outline-none transition-colors duration-200;
+    border-color: var(--border);
+    color: var(--ink);
+  }
+  .input-luxury::placeholder { color: var(--muted); }
+  .input-luxury:focus { border-color: var(--gold-deep); }
+
+  .label-luxury {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── Badges ── */
+  .badge-gold {
+    @apply inline-flex items-center px-3 py-1 text-white text-[0.6rem] font-semibold uppercase tracking-widest;
+    background: var(--gold-deep);
+  }
+  .badge-dark {
+    @apply inline-flex items-center px-3 py-1 text-white text-[0.6rem] font-semibold uppercase tracking-widest;
+    background: var(--ink);
+  }
+  .badge-light {
+    @apply inline-flex items-center px-3 py-1.5 text-[0.6rem] font-semibold uppercase tracking-widest;
+    background: rgba(255,255,255,0.92);
+    color: var(--ink);
+    backdrop-filter: blur(8px);
+  }
+
+  /* ── Link underline ── */
+  .link-underline {
+    position: relative;
+  }
+  .link-underline::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: -2px;
+    width: 100%; height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .link-underline:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  /* ── Tab pill ── */
+  .tab-pill {
+    @apply px-5 py-2 text-[0.65rem] tracking-[0.22em] uppercase font-semibold border transition-all duration-200 cursor-pointer;
+    border-color: var(--border);
+    color: var(--muted);
+  }
+  .tab-pill:hover { border-color: var(--ink); color: var(--ink); }
+  .tab-pill.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+  .tab-pill.active-gold { background: var(--gold-deep); color: var(--white); border-color: var(--gold-deep); }
+
+  /* ── Stat block ── */
+  .stat-block {
+    @apply flex flex-col gap-1;
+  }
+  .stat-number {
+    font-family: var(--font-cormorant), Georgia, serif;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 400;
+    line-height: 1;
+    color: var(--gold);
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+}
+
+@layer utilities {
+  .text-gradient-gold {
+    background: linear-gradient(135deg, var(--gold-soft) 0%, var(--gold) 50%, var(--gold-deep) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A84C' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .text-ink { color: var(--ink); }
+  .text-muted { color: var(--muted); }
+  .text-gold { color: var(--gold); }
+  .text-gold-deep { color: var(--gold-deep); }
+  .text-gold-soft { color: var(--gold-soft); }
+  .bg-cream { background: var(--cream); }
+  .bg-cream-dark { background: var(--cream-dark); }
+  .bg-ink { background: var(--ink); }
+  .bg-gold { background: var(--gold); }
+  .bg-gold-pale { background: var(--gold-pale); }
+  .border-gold { border-color: var(--gold); }
+  .border-border { border-color: var(--border); }
+}
