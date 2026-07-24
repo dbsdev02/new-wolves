@@ -8,7 +8,7 @@ const nextConfig = {
       { protocol: 'http', hostname: 'localhost', port: '8000' },
       { protocol: 'https', hostname: '*.amazonaws.com' },
       { protocol: 'https', hostname: '*.s3.amazonaws.com' },
-      { protocol: 'https', hostname: 'new-wolves-puk4.vercel.app' },
+      { protocol: 'https', hostname: 'new-wolves.onrender.com' },
     ],
   },
   async rewrites() {
