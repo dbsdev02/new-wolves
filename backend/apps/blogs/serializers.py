@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from apps.utils import get_image_url
 from .models import Blog, BlogCategory, BlogTag, BlogComment
 
 
@@ -63,8 +64,7 @@ class BlogDetailSerializer(serializers.ModelSerializer):
 
     def get_author_avatar(self, obj):
         if obj.author and obj.author.avatar:
-            request = self.context.get('request')
-            return request.build_absolute_uri(obj.author.avatar.url) if request else obj.author.avatar.url
+            return get_image_url(obj.author.avatar)
         return None
 
 

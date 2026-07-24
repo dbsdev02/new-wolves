@@ -123,6 +123,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Cloudinary (read early — REST_FRAMEWORK below needs it)
+USE_CLOUDINARY = env.bool('USE_CLOUDINARY', default=False)
+
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -147,6 +150,13 @@ REST_FRAMEWORK = {
         'anon': '2000/hour',
         'user': '5000/hour',
     },
+    # When Cloudinary is off, serialize image/file fields as their relative
+    # storage path (e.g. "developers/logos/1.png") instead of an absolute URL
+    # pointing at this server — the frontend resolves that path against its
+    # own bundled /public/media copy. Once Cloudinary is on, storage.url is
+    # already an absolute https:// URL, so DRF's build_absolute_uri leaves it
+    # unchanged and this has no effect.
+    'UPLOADED_FILES_USE_URL': USE_CLOUDINARY,
 }
 
 # JWT
@@ -196,7 +206,6 @@ CACHES = {
 }
 
 # Cloudinary
-USE_CLOUDINARY = env.bool('USE_CLOUDINARY', default=False)
 if USE_CLOUDINARY:
     import cloudinary
     INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']

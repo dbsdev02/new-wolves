@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from apps.utils import get_image_url
 from .models import Property, PropertyImage, FloorPlan, PaymentPlan, NearbyPlace, Amenity
 
 
@@ -52,10 +53,7 @@ class PropertyListSerializer(serializers.ModelSerializer):
 
     def get_primary_image(self, obj):
         img = obj.images.filter(is_primary=True).first() or obj.images.first()
-        if img:
-            request = self.context.get('request')
-            return request.build_absolute_uri(img.image.url) if request else img.image.url
-        return None
+        return get_image_url(img.image) if img else None
 
 
 class PropertyDetailSerializer(serializers.ModelSerializer):
@@ -83,7 +81,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
                 'phone': obj.agent.phone,
                 'whatsapp': obj.agent.whatsapp,
                 'email': obj.agent.email,
-                'photo': self.context['request'].build_absolute_uri(obj.agent.photo.url) if obj.agent.photo else None,
+                'photo': get_image_url(obj.agent.photo),
                 'designation': obj.agent.designation,
             }
         return None
