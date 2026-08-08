@@ -15,6 +15,7 @@ backend/.env
 # Frontend (Next.js)
 frontend/node_modules/
 frontend/.next/
+frontend/dist/
 frontend/out/
 frontend/.env.local
 frontend/*.tsbuildinfo
