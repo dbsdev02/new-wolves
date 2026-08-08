@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { formatPrice, getMediaUrl } from '@/lib/utils';
+import { formatPrice, formatBedroomRange, getMediaUrl } from '@/lib/utils';
 import type { Property } from '@/types';
 import { HiHeart, HiOutlineHeart, HiOutlineArrowUpRight } from 'react-icons/hi2';
 import { FaBed, FaBath } from 'react-icons/fa';
@@ -20,6 +20,7 @@ const purposeLabel = (p: Property) =>
 
 export function PropertyCard({ property, className }: PropertyCardProps) {
   const image = property.primary_image || property.featured_image;
+  const bedroomLabel = formatBedroomRange(property.min_bedrooms, property.max_bedrooms);
   const { isWishlisted, toggleWishlist, isComparing, toggleCompare, compare } = usePropertyListStore();
   const wishlisted = isWishlisted(property.slug);
   const comparing = isComparing(property.slug);
@@ -50,7 +51,7 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
           className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(13,13,13,0.7) 0%, rgba(13,13,13,0.05) 55%, transparent 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,2,25,0.7) 0%, rgba(0,2,25,0.05) 55%, transparent 100%)' }} />
 
         {/* Top badges */}
         <div className="absolute top-4 left-4 flex flex-wrap gap-1.5">
@@ -106,7 +107,7 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
           <div className="flex items-center gap-4 text-[0.65rem] tracking-wider uppercase" style={{ color: 'var(--muted)' }}>
             <span className="flex items-center gap-1.5">
               <FaBed className="h-3 w-3" />
-              {property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bed`}
+              {bedroomLabel === 'Studio' ? bedroomLabel : `${bedroomLabel} Bed`}
             </span>
             <span className="flex items-center gap-1.5">
               <FaBath className="h-3 w-3" />

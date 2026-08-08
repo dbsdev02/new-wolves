@@ -12,7 +12,7 @@ def make_property(**kwargs):
         title='Test Property', description='A lovely test property.',
         property_type='apartment', purpose='sale', status='published',
         price=1000000, address='Test Address', city='Dubai',
-        bedrooms=2, bathrooms=2, area_sqft=1200,
+        min_bedrooms=2, max_bedrooms=2, bathrooms=2, area_sqft=1200,
     )
     defaults.update(kwargs)
     return Property.objects.create(**defaults)
@@ -82,7 +82,7 @@ class PropertyListTests(APITestCase):
             'title': 'Brand New Property', 'description': 'Great place',
             'property_type': 'apartment', 'purpose': 'sale', 'status': 'published',
             'price': 2000000, 'address': 'Somewhere', 'city': 'Dubai',
-            'bedrooms': 3, 'bathrooms': 2, 'area_sqft': 1500,
+            'min_bedrooms': 3, 'max_bedrooms': 3, 'bathrooms': 2, 'area_sqft': 1500,
         })
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Property.objects.filter(title='Brand New Property').exists())

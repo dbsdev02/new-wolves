@@ -22,6 +22,7 @@ const typeColors: Record<string, string> = {
   mortgage: 'bg-orange-100 text-orange-600',
   newsletter: 'bg-purple-100 text-purple-600',
   career: 'bg-pink-100 text-pink-600',
+  sell_property: 'bg-teal-100 text-teal-600',
 };
 
 export function AdminLeadsClient() {
@@ -186,6 +187,15 @@ export function AdminLeadsClient() {
                 ['Status', selectedLead.status],
                 ['Source', selectedLead.source || '-'],
                 ['Property', selectedLead.property_title || '-'],
+                ...(selectedLead.lead_type === 'sell_property' ? [
+                  ['Purpose', selectedLead.submitted_purpose === 'sale' ? 'Sell' : selectedLead.submitted_purpose === 'rent' ? 'Rent Out' : '-'],
+                  ['Property Type', selectedLead.submitted_property_type || '-'],
+                  ['Address', selectedLead.submitted_address || '-'],
+                  ['Bedrooms', selectedLead.submitted_bedrooms ?? '-'],
+                  ['Bathrooms', selectedLead.submitted_bathrooms ?? '-'],
+                  ['Area (sqft)', selectedLead.submitted_area_sqft ?? '-'],
+                  ['Asking Price', selectedLead.asking_price ? `AED ${Number(selectedLead.asking_price).toLocaleString()}` : '-'],
+                ] : []),
                 ['Message', selectedLead.message || '-'],
                 ['Notes', selectedLead.notes || '-'],
                 ['Date', format(new Date(selectedLead.created_at), 'PPpp')],

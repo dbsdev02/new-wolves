@@ -7,8 +7,11 @@ class PropertyFilter(django_filters.FilterSet):
     max_price = django_filters.NumberFilter(field_name='price', lookup_expr='lte')
     min_area = django_filters.NumberFilter(field_name='area_sqft', lookup_expr='gte')
     max_area = django_filters.NumberFilter(field_name='area_sqft', lookup_expr='lte')
-    min_bedrooms = django_filters.NumberFilter(field_name='bedrooms', lookup_expr='gte')
-    max_bedrooms = django_filters.NumberFilter(field_name='bedrooms', lookup_expr='lte')
+    # Range-overlap search: a property advertising e.g. 1-3 bedrooms should
+    # match a search for "at least 2" (its max reaches 2+) or "at most 2"
+    # (its min goes down to 2 or below), not an exact match on one field.
+    min_bedrooms = django_filters.NumberFilter(field_name='max_bedrooms', lookup_expr='gte')
+    max_bedrooms = django_filters.NumberFilter(field_name='min_bedrooms', lookup_expr='lte')
     community = django_filters.CharFilter(field_name='community__slug')
     developer = django_filters.CharFilter(field_name='developer__slug')
     project = django_filters.CharFilter(field_name='project__slug')
@@ -22,5 +25,5 @@ class PropertyFilter(django_filters.FilterSet):
         model = Property
         fields = [
             'property_type', 'purpose', 'status', 'completion_status',
-            'bedrooms', 'bathrooms', 'currency', 'furnishing',
+            'bathrooms', 'currency', 'furnishing',
         ]

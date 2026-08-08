@@ -7,5 +7,5 @@ export const metadata: Metadata = { title: 'Edit Project - Admin' };
 
 export default async function EditProjectPage({ params }: Props) {
   const { id } = await params;
-  return <ProjectFormClient projectId={Number(id)} />;
+  return <ProjectFormClient slug={id} />;
 }

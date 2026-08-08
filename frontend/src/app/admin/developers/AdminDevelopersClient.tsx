@@ -5,12 +5,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { developerService } from '@/services/contentService';
 import { getMediaUrl } from '@/lib/utils';
+import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { HiPlus, HiPencil, HiTrash, HiX } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
 export function AdminDevelopersClient() {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
+  const [logo, setLogo] = useState<File | null>(null);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -25,7 +28,7 @@ export function AdminDevelopersClient() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-developers'] });
       toast.success(editItem ? 'Developer updated!' : 'Developer created!');
-      setShowForm(false); setEditItem(null); reset();
+      setShowForm(false); setEditItem(null); setLogo(null); setCoverImage(null); reset();
     },
     onError: () => toast.error('Failed to save.'),
   });
@@ -38,10 +41,12 @@ export function AdminDevelopersClient() {
   const onSubmit = (data: any) => {
     const fd = new FormData();
     Object.entries(data).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== '') fd.append(k, String(v)); });
+    if (logo) fd.append('logo', logo);
+    if (coverImage) fd.append('cover_image', coverImage);
     saveMutation.mutate(fd);
   };
 
-  const openEdit = (item: any) => { setEditItem(item); reset(item); setShowForm(true); };
+  const openEdit = (item: any) => { setEditItem(item); setLogo(null); setCoverImage(null); reset(item); setShowForm(true); };
 
   const fieldClass = 'input-luxury text-sm';
   const labelClass = 'label-luxury';
@@ -53,7 +58,7 @@ export function AdminDevelopersClient() {
           <h1 className="font-display text-2xl font-bold text-luxury-black">Developers</h1>
           <p className="text-gray-500 text-sm mt-1">{data?.results?.length || 0} developers</p>
         </div>
-        <button onClick={() => { setEditItem(null); reset({}); setShowForm(true); }} className="btn-gold gap-2">
+        <button onClick={() => { setEditItem(null); setLogo(null); setCoverImage(null); reset({}); setShowForm(true); }} className="btn-gold gap-2">
           <HiPlus className="w-5 h-5" /> Add Developer
         </button>
       </div>
@@ -111,6 +116,10 @@ export function AdminDevelopersClient() {
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div><label className={labelClass}>Name *</label><input {...register('name', { required: true })} className={fieldClass} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <ImageUploadField label="Logo" file={logo} onChange={setLogo} existingUrl={editItem?.logo} />
+                <ImageUploadField label="Cover Image" file={coverImage} onChange={setCoverImage} existingUrl={editItem?.cover_image} />
+              </div>
               <div><label className={labelClass}>Short Description</label><textarea {...register('short_description')} rows={2} className={`${fieldClass} resize-none`} /></div>
               <div><label className={labelClass}>Description</label><textarea {...register('description')} rows={4} className={`${fieldClass} resize-none`} /></div>
               <div className="grid grid-cols-2 gap-4">

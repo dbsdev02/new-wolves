@@ -68,6 +68,7 @@ class BlogViewSet(viewsets.ModelViewSet):
 class BlogCategoryViewSet(viewsets.ModelViewSet):
     queryset = BlogCategory.objects.all()
     serializer_class = BlogCategorySerializer
+    pagination_class = None
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -78,6 +79,7 @@ class BlogCategoryViewSet(viewsets.ModelViewSet):
 class BlogTagViewSet(viewsets.ModelViewSet):
     queryset = BlogTag.objects.all()
     serializer_class = BlogTagSerializer
+    pagination_class = None
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:

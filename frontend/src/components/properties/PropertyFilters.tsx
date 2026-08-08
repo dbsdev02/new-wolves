@@ -26,6 +26,21 @@ export function PropertyFilters({ filters, onUpdate }: Props) {
         <h3 className="mt-2 serif text-xl text-ink">Filter Properties</h3>
       </div>
 
+      {/* Location */}
+      <div>
+        <p className="text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground mb-3">Location</p>
+        <select
+          value={filters.community || ''}
+          onChange={(e) => onUpdate({ community: e.target.value || undefined })}
+          className={`${fieldClass} appearance-none`}
+        >
+          <option value="">All Locations</option>
+          {communities?.results?.map((c) => (
+            <option key={c.id} value={c.slug}>{c.name}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Purpose */}
       <div>
         <p className="text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground mb-3">Purpose</p>
@@ -64,22 +79,37 @@ export function PropertyFilters({ filters, onUpdate }: Props) {
       {/* Bedrooms */}
       <div>
         <p className="text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground mb-3">Bedrooms</p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => onUpdate({ min_bedrooms: undefined })}
-            className={`px-3 py-1.5 text-xs border transition-colors ${!filters.min_bedrooms ? 'bg-ink text-white border-ink' : 'border-border hover:border-gold'}`}
+        <div className="grid grid-cols-2 gap-3">
+          <select
+            value={filters.min_bedrooms ?? ''}
+            onChange={(e) => {
+              const min = e.target.value === '' ? undefined : Number(e.target.value);
+              onUpdate({
+                min_bedrooms: min,
+                max_bedrooms: min !== undefined && filters.max_bedrooms !== undefined && filters.max_bedrooms < min
+                  ? min
+                  : filters.max_bedrooms,
+              });
+            }}
+            className={`${fieldClass} appearance-none`}
           >
-            Any
-          </button>
-          {bedroomOptions.map((b) => (
-            <button
-              key={b}
-              onClick={() => onUpdate({ min_bedrooms: b })}
-              className={`px-3 py-1.5 text-xs border transition-colors ${filters.min_bedrooms === b ? 'bg-ink text-white border-ink' : 'border-border hover:border-gold'}`}
-            >
-              {b === 0 ? 'Studio' : `${b}+`}
-            </button>
-          ))}
+            <option value="">Min Bedrooms</option>
+            {bedroomOptions.map((b) => (
+              <option key={b} value={b}>{b === 0 ? 'Studio' : b}</option>
+            ))}
+          </select>
+          <select
+            value={filters.max_bedrooms ?? ''}
+            onChange={(e) => onUpdate({ max_bedrooms: e.target.value === '' ? undefined : Number(e.target.value) })}
+            className={`${fieldClass} appearance-none`}
+          >
+            <option value="">Max Bedrooms</option>
+            {bedroomOptions
+              .filter((b) => filters.min_bedrooms === undefined || b >= filters.min_bedrooms)
+              .map((b) => (
+                <option key={b} value={b}>{b === 0 ? 'Studio' : b}</option>
+              ))}
+          </select>
         </div>
       </div>
 
@@ -102,21 +132,6 @@ export function PropertyFilters({ filters, onUpdate }: Props) {
             className={fieldClass}
           />
         </div>
-      </div>
-
-      {/* Community */}
-      <div>
-        <p className="text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground mb-3">Community</p>
-        <select
-          value={filters.community || ''}
-          onChange={(e) => onUpdate({ community: e.target.value || undefined })}
-          className={`${fieldClass} appearance-none`}
-        >
-          <option value="">All Communities</option>
-          {communities?.results?.map((c) => (
-            <option key={c.id} value={c.slug}>{c.name}</option>
-          ))}
-        </select>
       </div>
 
       {/* Developer */}
@@ -151,7 +166,7 @@ export function PropertyFilters({ filters, onUpdate }: Props) {
 
       {/* Clear */}
       <button
-        onClick={() => onUpdate({ purpose: undefined, property_type: undefined, min_price: undefined, max_price: undefined, min_bedrooms: undefined, community: undefined, developer: undefined, completion_status: undefined })}
+        onClick={() => onUpdate({ purpose: undefined, property_type: undefined, min_price: undefined, max_price: undefined, min_bedrooms: undefined, max_bedrooms: undefined, community: undefined, developer: undefined, completion_status: undefined })}
         className="w-full py-3 border border-border text-xs tracking-[0.15em] uppercase text-muted-foreground hover:border-gold hover:text-gold-deep transition-colors"
       >
         Clear All Filters

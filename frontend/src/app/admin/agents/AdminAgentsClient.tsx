@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { agentService } from '@/services/contentService';
 import { getMediaUrl } from '@/lib/utils';
+import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { HiPlus, HiPencil, HiTrash, HiX } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
@@ -12,6 +13,7 @@ import api from '@/lib/api';
 export function AdminAgentsClient() {
   const [showForm, setShowForm] = useState(false);
   const [editAgent, setEditAgent] = useState<any>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -31,6 +33,7 @@ export function AdminAgentsClient() {
       toast.success(editAgent ? 'Agent updated!' : 'Agent created!');
       setShowForm(false);
       setEditAgent(null);
+      setPhoto(null);
       reset();
     },
     onError: () => toast.error('Failed to save agent.'),
@@ -44,11 +47,13 @@ export function AdminAgentsClient() {
   const onSubmit = (data: any) => {
     const fd = new FormData();
     Object.entries(data).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== '') fd.append(k, String(v)); });
+    if (photo) fd.append('photo', photo);
     saveMutation.mutate(fd);
   };
 
   const openEdit = (agent: any) => {
     setEditAgent(agent);
+    setPhoto(null);
     reset(agent);
     setShowForm(true);
   };
@@ -63,7 +68,7 @@ export function AdminAgentsClient() {
           <h1 className="font-display text-2xl font-bold text-luxury-black">Agents</h1>
           <p className="text-gray-500 text-sm mt-1">{data?.results?.length || 0} agents</p>
         </div>
-        <button onClick={() => { setEditAgent(null); reset({}); setShowForm(true); }} className="btn-gold gap-2">
+        <button onClick={() => { setEditAgent(null); setPhoto(null); reset({}); setShowForm(true); }} className="btn-gold gap-2">
           <HiPlus className="w-5 h-5" /> Add Agent
         </button>
       </div>
@@ -119,6 +124,7 @@ export function AdminAgentsClient() {
                 <div><label className={labelClass}>First Name *</label><input {...register('first_name', { required: true })} className={fieldClass} /></div>
                 <div><label className={labelClass}>Last Name *</label><input {...register('last_name', { required: true })} className={fieldClass} /></div>
               </div>
+              <ImageUploadField label="Photo" file={photo} onChange={setPhoto} existingUrl={editAgent?.photo} />
               <div><label className={labelClass}>Designation</label><input {...register('designation')} className={fieldClass} placeholder="Senior Property Consultant" /></div>
               <div className="grid grid-cols-2 gap-4">
                 <div><label className={labelClass}>Email *</label><input {...register('email', { required: true })} type="email" className={fieldClass} /></div>

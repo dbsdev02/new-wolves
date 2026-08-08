@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import type { PaginatedResponse, Developer, Community, Project, Agent, Blog, Testimonial, FAQ } from '@/types';
+import type { PaginatedResponse, Developer, Community, Project, Agent, Blog, Testimonial, FAQ, NewsItem, TickerStat } from '@/types';
 
 export const developerService = {
   getAll: (params?: Record<string, unknown>) => api.get<PaginatedResponse<Developer>>('/developers/', { params }),
@@ -45,8 +45,8 @@ export const blogService = {
     api.post(`/blogs/${slug}/add_comment/`, data),
   getCategories: () => api.get('/blogs/categories/'),
   getTags: () => api.get('/blogs/tags/'),
-  create: (data: Record<string, unknown>) => api.post('/blogs/', data),
-  update: (slug: string, data: Record<string, unknown>) => api.patch(`/blogs/${slug}/`, data),
+  create: (data: FormData) => api.post('/blogs/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  update: (slug: string, data: FormData) => api.patch(`/blogs/${slug}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   delete: (slug: string) => api.delete(`/blogs/${slug}/`),
 };
 
@@ -56,4 +56,22 @@ export const testimonialService = {
 
 export const faqService = {
   getAll: (params?: Record<string, unknown>) => api.get<FAQ[]>('/faqs/', { params }),
+};
+
+export const newsItemService = {
+  getAll: () => api.get<NewsItem[]>('/news/items/'),
+  create: (data: { headline: string; link?: string; order?: number; is_active?: boolean }) =>
+    api.post<NewsItem>('/news/items/', data),
+  update: (id: number, data: Partial<{ headline: string; link: string; order: number; is_active: boolean }>) =>
+    api.patch<NewsItem>(`/news/items/${id}/`, data),
+  delete: (id: number) => api.delete(`/news/items/${id}/`),
+};
+
+export const tickerStatService = {
+  getAll: () => api.get<TickerStat[]>('/news/stats/'),
+  create: (data: { label: string; value: string; order?: number; is_active?: boolean }) =>
+    api.post<TickerStat>('/news/stats/', data),
+  update: (id: number, data: Partial<{ label: string; value: string; order: number; is_active: boolean }>) =>
+    api.patch<TickerStat>(`/news/stats/${id}/`, data),
+  delete: (id: number) => api.delete(`/news/stats/${id}/`),
 };

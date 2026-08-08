@@ -86,10 +86,42 @@ class PropertyViewSet(viewsets.ModelViewSet):
             created.append(PropertyImageSerializer(pi, context={'request': request}).data)
         return Response(created, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=['delete'], url_path='images/(?P<image_id>[^/.]+)', permission_classes=[IsEditorOrAbove])
+    def delete_image(self, request, slug=None, image_id=None):
+        prop = self.get_object()
+        deleted, _ = PropertyImage.objects.filter(property=prop, id=image_id).delete()
+        if not deleted:
+            return Response({'detail': 'Image not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsEditorOrAbove])
+    def add_floor_plan(self, request, slug=None):
+        prop = self.get_object()
+        if not request.FILES.get('image') and not request.FILES.get('pdf'):
+            return Response({'detail': 'Provide an image or a PDF.'}, status=status.HTTP_400_BAD_REQUEST)
+        fp = FloorPlan.objects.create(
+            property=prop,
+            title=request.data.get('title') or 'Floor Plan',
+            image=request.FILES.get('image'),
+            pdf=request.FILES.get('pdf'),
+            bedrooms=request.data.get('bedrooms') or None,
+            area_sqft=request.data.get('area_sqft') or None,
+        )
+        return Response(FloorPlanSerializer(fp, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['delete'], url_path='floor-plans/(?P<plan_id>[^/.]+)', permission_classes=[IsEditorOrAbove])
+    def delete_floor_plan(self, request, slug=None, plan_id=None):
+        prop = self.get_object()
+        deleted, _ = FloorPlan.objects.filter(property=prop, id=plan_id).delete()
+        if not deleted:
+            return Response({'detail': 'Floor plan not found.'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class AmenityViewSet(viewsets.ModelViewSet):
     queryset = Amenity.objects.all()
     serializer_class = AmenitySerializer
+    pagination_class = None
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:

@@ -22,7 +22,7 @@ const services = [
     subtitle: 'Maximize Your Returns',
     description: 'Get the best value for your property with our proven marketing strategies and expert negotiation.',
     features: ['Free property valuation', 'Professional photography', 'Multi-channel marketing', 'Qualified buyer network', 'Seamless transaction management'],
-    cta: { label: 'List Your Property', href: '/contact?type=selling' },
+    cta: { label: 'List Your Property', href: '/list-your-property' },
   },
   {
     id: 'renting',

@@ -12,6 +12,7 @@ import { BlogsSection } from '@/components/home/BlogsSection';
 import { SustainabilitySection } from '@/components/home/SustainabilitySection';
 import { FAQSection } from '@/components/home/FAQSection';
 import { ContactCTA } from '@/components/home/ContactCTA';
+import { NewsTicker } from '@/components/home/NewsTicker';
 
 export const metadata: Metadata = {
   title: 'Wolves International — Luxury Dubai Real Estate',
@@ -59,6 +60,9 @@ export default function HomePage() {
 
       {/* 13. Contact CTA — ink (dark) */}
       <ContactCTA />
+
+      {/* 14. News ticker — above footer */}
+      <NewsTicker />
     </>
   );
 }

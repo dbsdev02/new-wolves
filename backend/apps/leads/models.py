@@ -10,6 +10,7 @@ class Lead(models.Model):
         ('schedule_visit', 'Schedule Visit'), ('mortgage', 'Mortgage Inquiry'),
         ('newsletter', 'Newsletter'), ('brochure', 'Brochure Download'),
         ('career', 'Career Application'), ('general', 'General'),
+        ('sell_property', 'List Your Property'),
     ]
     STATUS_CHOICES = [
         ('new', 'New'), ('contacted', 'Contacted'), ('qualified', 'Qualified'),
@@ -47,6 +48,15 @@ class Lead(models.Model):
     position = models.CharField(max_length=200, blank=True)
     resume = models.FileField(upload_to='leads/resumes/', blank=True, null=True)
     experience_years = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    # List Your Property (sell_property)
+    submitted_property_type = models.CharField(max_length=30, blank=True)
+    submitted_purpose = models.CharField(max_length=20, blank=True, help_text='sale or rent')
+    submitted_address = models.CharField(max_length=500, blank=True)
+    submitted_bedrooms = models.PositiveSmallIntegerField(null=True, blank=True)
+    submitted_bathrooms = models.PositiveSmallIntegerField(null=True, blank=True)
+    submitted_area_sqft = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    asking_price = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
 
     # CRM
     notes = models.TextField(blank=True)

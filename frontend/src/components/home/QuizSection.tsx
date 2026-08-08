@@ -13,7 +13,7 @@ export function QuizSection() {
               alt="Find your dream home"
               className="absolute inset-0 h-full w-full object-cover"
             />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(13,13,13,0.5) 0%, transparent 70%)' }} />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(0,2,25,0.5) 0%, transparent 70%)' }} />
             <div className="absolute top-6 left-6">
               <span className="badge-light">30-Second Quiz</span>
             </div>

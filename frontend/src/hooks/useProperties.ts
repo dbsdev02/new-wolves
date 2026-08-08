@@ -2,11 +2,12 @@ import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/rea
 import { propertyService } from '@/services/propertyService';
 import type { PropertyFilters } from '@/types';
 
-export const useProperties = (filters: PropertyFilters = {}) =>
+export const useProperties = (filters: PropertyFilters = {}, options: { enabled?: boolean } = {}) =>
   useQuery({
     queryKey: ['properties', filters],
     queryFn: () => propertyService.getAll(filters).then(r => r.data),
     staleTime: 5 * 60 * 1000,
+    enabled: options.enabled,
   });
 
 export const useProperty = (slug: string) =>

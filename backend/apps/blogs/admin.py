@@ -10,6 +10,12 @@ class BlogAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
     list_editable = ['status', 'is_featured']
+    exclude = ['views_count']
+
+    def save_model(self, request, obj, form, change):
+        if not obj.author_id:
+            obj.author = request.user
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(BlogCategory)

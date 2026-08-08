@@ -19,6 +19,8 @@ async function fetchActiveRedirects(): Promise<RedirectRule[]> {
     });
     clearTimeout(timeout);
     if (!res.ok) return [];
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) return [];
     return res.json();
   } catch {
     return [];

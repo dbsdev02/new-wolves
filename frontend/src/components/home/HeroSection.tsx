@@ -42,7 +42,7 @@ export function HeroSection() {
         alt="Dubai skyline"
         className="absolute inset-0 h-full w-full object-cover animate-slow-zoom"
       />
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(13,13,13,0.65) 0%, rgba(13,13,13,0.4) 50%, rgba(13,13,13,0.85) 100%)' }} />
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,2,25,0.65) 0%, rgba(0,2,25,0.4) 50%, rgba(0,2,25,0.85) 100%)' }} />
 
       {/* Content */}
       <div className="relative z-10 container-luxe flex flex-col justify-center flex-1 pt-28 pb-0">

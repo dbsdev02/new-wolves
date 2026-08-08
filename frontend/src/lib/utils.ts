@@ -18,6 +18,11 @@ export function formatArea(area: number): string {
   return `${new Intl.NumberFormat('en-AE').format(area)} sq.ft`;
 }
 
+export function formatBedroomRange(min: number, max: number): string {
+  if (min === 0 && max === 0) return 'Studio';
+  return min === max ? `${min}` : `${min}-${max}`;
+}
+
 export function truncate(str: string, length: number): string {
   return str.length > length ? `${str.substring(0, length)}...` : str;
 }
@@ -29,10 +34,13 @@ export function getMediaUrl(path: string | null | undefined): string {
   if (base.includes('cloudinary.com')) {
     return `${base}/image/upload/${path}`;
   }
-  if (base.includes('localhost:8000')) {
+  if (base) {
+    // Any configured backend host (local dev, cPanel, etc.) serves its own
+    // /media/ — resolve relative paths against it directly.
     return `${base}/media/${path}`;
   }
-  // Vercel: images served from public/media/
+  // No backend media base configured — falls back to the frontend's own
+  // bundled /public/media snapshot, if one exists.
   return `/media/${path}`;
 }
 

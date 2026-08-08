@@ -12,6 +12,7 @@ export interface Property {
   title: string;
   slug: string;
   reference_number: string;
+  dld_permit_number: string;
   description: string;
   property_type: string;
   purpose: 'sale' | 'rent' | 'off_plan';
@@ -30,7 +31,8 @@ export interface Property {
   agent_name: string | null;
   agent_phone: string | null;
   agent_data: AgentData | null;
-  bedrooms: number;
+  min_bedrooms: number;
+  max_bedrooms: number;
   bathrooms: number;
   area_sqft: number;
   parking_spaces: number;
@@ -78,7 +80,8 @@ export interface PropertyImage {
 export interface FloorPlan {
   id: number;
   title: string;
-  image: string;
+  image: string | null;
+  pdf: string | null;
   bedrooms: number | null;
   area_sqft: number | null;
 }
@@ -114,6 +117,7 @@ export interface AgentData {
   email: string;
   photo: string | null;
   designation: string;
+  rera_number: string;
 }
 
 export interface Agent {
@@ -270,6 +274,22 @@ export interface FAQ {
   order: number;
 }
 
+export interface NewsItem {
+  id: number;
+  headline: string;
+  link: string;
+  order: number;
+  is_active: boolean;
+}
+
+export interface TickerStat {
+  id: number;
+  label: string;
+  value: string;
+  order: number;
+  is_active: boolean;
+}
+
 export interface SiteSettings {
   company_name: string;
   tagline: string;
@@ -321,6 +341,13 @@ export interface Lead {
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
+  submitted_property_type?: string;
+  submitted_purpose?: string;
+  submitted_address?: string;
+  submitted_bedrooms?: number;
+  submitted_bathrooms?: number;
+  submitted_area_sqft?: number;
+  asking_price?: number;
 }
 
 export interface PropertyFilters {

@@ -84,7 +84,7 @@ export function AdminProjectsClient() {
                           <Link href={`/projects/${project.slug}`} target="_blank" className="p-1.5 text-gray-400 hover:text-gold transition-colors">
                             <HiEye className="w-4 h-4" />
                           </Link>
-                          <Link href={`/admin/projects/${project.id}`} className="p-1.5 text-gray-400 hover:text-gold transition-colors">
+                          <Link href={`/admin/projects/${project.slug}`} className="p-1.5 text-gray-400 hover:text-gold transition-colors">
                             <HiPencil className="w-4 h-4" />
                           </Link>
                           <button onClick={() => confirm(`Delete "${project.name}"?`) && deleteMutation.mutate(project.slug)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">

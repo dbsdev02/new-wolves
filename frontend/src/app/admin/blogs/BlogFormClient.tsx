@@ -1,15 +1,15 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { blogService } from '@/services/contentService';
+import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { HiArrowLeft } from 'react-icons/hi';
-import api from '@/lib/api';
 
-interface Props { blogId?: number }
+interface Props { slug?: string }
 
 interface BlogFormValues {
   title: string;
@@ -23,14 +23,15 @@ interface BlogFormValues {
   meta_description: string;
 }
 
-export function BlogFormClient({ blogId }: Props) {
+export function BlogFormClient({ slug }: Props) {
   const router = useRouter();
   const qc = useQueryClient();
-  const isEdit = !!blogId;
+  const isEdit = !!slug;
+  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
 
   const { data: existing } = useQuery({
-    queryKey: ['blog-edit', blogId],
-    queryFn: () => api.get(`/blogs/${blogId}/`).then(r => r.data),
+    queryKey: ['blog-edit', slug],
+    queryFn: () => blogService.getBySlug(slug!).then(r => r.data as any),
     enabled: isEdit,
   });
 
@@ -48,9 +49,14 @@ export function BlogFormClient({ blogId }: Props) {
   }, [existing, reset]);
 
   const mutation = useMutation({
-    mutationFn: (data: any) => isEdit
-      ? blogService.update(existing.slug, data)
-      : blogService.create(data),
+    mutationFn: (data: any) => {
+      const fd = new FormData();
+      Object.entries(data).forEach(([k, v]) => {
+        if (v !== null && v !== undefined && v !== '') fd.append(k, String(v));
+      });
+      if (featuredImage) fd.append('featured_image', featuredImage);
+      return isEdit ? blogService.update(existing.slug, fd) : blogService.create(fd);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-blogs'] });
       toast.success(isEdit ? 'Blog updated!' : 'Blog created!');
@@ -91,6 +97,12 @@ export function BlogFormClient({ blogId }: Props) {
             <textarea {...register('content', { required: true })} rows={15} className={`${fieldClass} resize-none font-mono text-xs`} placeholder="Article content (HTML supported)" />
             {errors.content && <p className="text-red-500 text-xs mt-1">Content is required</p>}
           </div>
+          <ImageUploadField
+            label="Featured Image"
+            file={featuredImage}
+            onChange={setFeaturedImage}
+            existingUrl={existing?.featured_image}
+          />
         </div>
 
         <div className="bg-white border border-gray-100 p-6 space-y-5">

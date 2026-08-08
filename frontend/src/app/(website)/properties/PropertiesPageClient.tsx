@@ -28,6 +28,7 @@ export function PropertiesPageClient() {
     min_price: searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined,
     max_price: searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined,
     min_bedrooms: searchParams.get('min_bedrooms') ? Number(searchParams.get('min_bedrooms')) : undefined,
+    max_bedrooms: searchParams.get('max_bedrooms') ? Number(searchParams.get('max_bedrooms')) : undefined,
     completion_status: searchParams.get('completion_status') || undefined,
     is_featured: searchParams.get('is_featured') === 'true' ? true : undefined,
     search: searchParams.get('search') || undefined,
@@ -140,7 +141,7 @@ export function PropertiesPageClient() {
               <div className="text-center py-20">
                 <p className="serif text-3xl text-ink/60">No residences match your filters.</p>
                 <button
-                  onClick={() => updateFilters({ purpose: undefined, property_type: undefined, min_price: undefined, max_price: undefined })}
+                  onClick={() => updateFilters({ purpose: undefined, property_type: undefined, min_price: undefined, max_price: undefined, min_bedrooms: undefined, max_bedrooms: undefined })}
                   className="btn-gold mt-8"
                 >
                   Clear Filters

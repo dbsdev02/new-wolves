@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   HiHome, HiOfficeBuilding, HiUsers, HiDocumentText, HiCog,
   HiLogout, HiChartBar, HiGlobe, HiCollection, HiStar,
-  HiQuestionMarkCircle, HiMail, HiMenu, HiX
+  HiQuestionMarkCircle, HiMail, HiMenu, HiX, HiNewspaper
 } from 'react-icons/hi';
 import { MdBusiness, MdPeople, MdApartment } from 'react-icons/md';
 import { useState } from 'react';
@@ -15,6 +15,7 @@ import { useState } from 'react';
 const navItems = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: HiHome },
   { label: 'Properties', href: '/admin/properties', icon: HiOfficeBuilding },
+  { label: 'Amenities', href: '/admin/amenities', icon: HiCollection },
   { label: 'Projects', href: '/admin/projects', icon: MdApartment },
   { label: 'Developers', href: '/admin/developers', icon: MdBusiness },
   { label: 'Communities', href: '/admin/communities', icon: HiGlobe },
@@ -23,6 +24,7 @@ const navItems = [
   { label: 'Blogs', href: '/admin/blogs', icon: HiDocumentText },
   { label: 'Testimonials', href: '/admin/testimonials', icon: HiStar },
   { label: 'FAQs', href: '/admin/faqs', icon: HiQuestionMarkCircle },
+  { label: 'News Ticker', href: '/admin/news', icon: HiNewspaper },
   { label: 'SEO', href: '/admin/seo', icon: HiChartBar },
   { label: 'Users', href: '/admin/users', icon: HiUsers },
   { label: 'Settings', href: '/admin/settings', icon: HiCog },

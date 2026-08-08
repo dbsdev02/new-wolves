@@ -56,7 +56,7 @@ export function CommunitiesSection() {
                   className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, 33vw"
                 />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(13,13,13,0.75) 0%, rgba(13,13,13,0.1) 60%, transparent 100%)' }} />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,2,25,0.75) 0%, rgba(0,2,25,0.1) 60%, transparent 100%)' }} />
                 <div className="absolute inset-0 flex flex-col justify-end p-7 text-white">
                   <p className="eyebrow mb-2" style={{ color: 'var(--gold-soft)' }}>
                     {c.total_properties} residences

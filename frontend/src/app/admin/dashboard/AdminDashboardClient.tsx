@@ -90,7 +90,7 @@ export function AdminDashboardClient() {
               <XAxis dataKey="month" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip />
-              <Bar dataKey="leads" fill="#C9A84C" />
+              <Bar dataKey="leads" fill="#E1B77E" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -103,7 +103,7 @@ export function AdminDashboardClient() {
               <XAxis dataKey="month" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} />
               <Tooltip />
-              <Line type="monotone" dataKey="properties" stroke="#C9A84C" strokeWidth={2} dot={{ fill: '#C9A84C' }} />
+              <Line type="monotone" dataKey="properties" stroke="#E1B77E" strokeWidth={2} dot={{ fill: '#E1B77E' }} />
             </LineChart>
           </ResponsiveContainer>
         </div>

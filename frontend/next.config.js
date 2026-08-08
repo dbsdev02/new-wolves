@@ -3,12 +3,14 @@ const path = require('path');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
+  distDir: 'dist',
   images: {
     remotePatterns: [
-      { protocol: 'http', hostname: 'localhost', port: '8000' },
+      { protocol: 'http', hostname: 'localhost' },
       { protocol: 'https', hostname: '*.amazonaws.com' },
       { protocol: 'https', hostname: '*.s3.amazonaws.com' },
-      { protocol: 'https', hostname: 'new-wolves.onrender.com' },
+      { protocol: 'https', hostname: 'backend.wolvesint.org' },
+      { protocol: 'https', hostname: 'new.wolvesint.ae' },
     ],
   },
   async rewrites() {

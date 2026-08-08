@@ -10,6 +10,7 @@ const footerLinks = {
     { label: 'Rent Property', href: '/properties?purpose=rent' },
     { label: 'Off Plan', href: '/properties?purpose=off_plan' },
     { label: 'Luxury Properties', href: '/properties?is_luxury=true' },
+    { label: 'List Your Property', href: '/list-your-property' },
   ],
   Company: [
     { label: 'About Us', href: '/about' },

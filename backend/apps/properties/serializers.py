@@ -18,7 +18,7 @@ class PropertyImageSerializer(serializers.ModelSerializer):
 class FloorPlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = FloorPlan
-        fields = ['id', 'title', 'image', 'bedrooms', 'area_sqft']
+        fields = ['id', 'title', 'image', 'pdf', 'bedrooms', 'area_sqft']
 
 
 class PaymentPlanSerializer(serializers.ModelSerializer):
@@ -46,7 +46,7 @@ class PropertyListSerializer(serializers.ModelSerializer):
             'id', 'title', 'slug', 'reference_number', 'property_type', 'purpose',
             'status', 'completion_status', 'price', 'currency', 'price_per_sqft',
             'address', 'city', 'community_name', 'developer_name', 'agent_name',
-            'agent_phone', 'bedrooms', 'bathrooms', 'area_sqft', 'parking_spaces',
+            'agent_phone', 'min_bedrooms', 'max_bedrooms', 'bathrooms', 'area_sqft', 'parking_spaces',
             'featured_image', 'primary_image', 'is_featured', 'is_hot', 'is_luxury',
             'is_new_launch', 'views_count', 'created_at',
         ]
@@ -83,12 +83,17 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
                 'email': obj.agent.email,
                 'photo': get_image_url(obj.agent.photo),
                 'designation': obj.agent.designation,
+                'rera_number': obj.agent.rera_number,
             }
         return None
 
 
 class PropertyWriteSerializer(serializers.ModelSerializer):
     amenity_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True, required=False)
+    # HTML multipart forms can't distinguish "amenity_ids omitted" from "amenity_ids
+    # sent as an empty list" (DRF's ListField.get_value falls back to `empty` either
+    # way), so an explicit flag is needed to represent "clear all amenities".
+    clear_amenities = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
         model = Property
@@ -96,6 +101,7 @@ class PropertyWriteSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         amenity_ids = validated_data.pop('amenity_ids', [])
+        validated_data.pop('clear_amenities', None)
         validated_data['created_by'] = self.context['request'].user
         property_obj = super().create(validated_data)
         if amenity_ids:
@@ -104,7 +110,10 @@ class PropertyWriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         amenity_ids = validated_data.pop('amenity_ids', None)
+        clear_amenities = validated_data.pop('clear_amenities', False)
         instance = super().update(instance, validated_data)
         if amenity_ids is not None:
             instance.amenities.set(amenity_ids)
+        elif clear_amenities:
+            instance.amenities.set([])
         return instance

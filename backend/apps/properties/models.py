@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth import get_user_model
+from .utils import extract_coordinates_from_maps_url
 
 User = get_user_model()
 
@@ -39,6 +40,7 @@ class Property(models.Model):
     slug = models.SlugField(max_length=300, unique=True, blank=True)
     description = models.TextField()
     reference_number = models.CharField(max_length=50, unique=True, blank=True)
+    dld_permit_number = models.CharField(max_length=50, blank=True, help_text='Dubai Land Department permit/listing number')
 
     # Classification
     property_type = models.CharField(max_length=30, choices=TYPE_CHOICES)
@@ -67,7 +69,8 @@ class Property(models.Model):
     agent = models.ForeignKey('agents.Agent', on_delete=models.SET_NULL, null=True, blank=True, related_name='properties')
 
     # Specs
-    bedrooms = models.PositiveSmallIntegerField(default=0)
+    min_bedrooms = models.PositiveSmallIntegerField(default=0)
+    max_bedrooms = models.PositiveSmallIntegerField(default=0)
     bathrooms = models.PositiveSmallIntegerField(default=0)
     area_sqft = models.DecimalField(max_digits=10, decimal_places=2)
     parking_spaces = models.PositiveSmallIntegerField(default=0)
@@ -125,6 +128,10 @@ class Property(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
+        if self.google_maps_url:
+            coords = extract_coordinates_from_maps_url(self.google_maps_url)
+            if coords:
+                self.latitude, self.longitude = coords
         if not self.slug:
             base_slug = slugify(self.title)
             slug = base_slug
@@ -158,7 +165,8 @@ class PropertyImage(models.Model):
 class FloorPlan(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='floor_plans')
     title = models.CharField(max_length=100)
-    image = models.ImageField(upload_to='properties/floor_plans/')
+    image = models.ImageField(upload_to='properties/floor_plans/', blank=True, null=True)
+    pdf = models.FileField(upload_to='properties/floor_plans/pdf/', blank=True, null=True)
     bedrooms = models.PositiveSmallIntegerField(null=True, blank=True)
     area_sqft = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 

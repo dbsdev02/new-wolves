@@ -17,11 +17,14 @@ type FormData = z.infer<typeof schema>;
 interface Props {
   propertyId: number;
   propertyTitle: string;
+  variant?: 'dark' | 'light';
 }
 
-const fieldClass = 'w-full bg-white/5 border border-white/15 px-4 py-3 text-sm placeholder:text-white/40 focus:outline-none focus:border-gold transition-colors';
-
-export function InquiryForm({ propertyId, propertyTitle }: Props) {
+export function InquiryForm({ propertyId, propertyTitle, variant = 'dark' }: Props) {
+  const fieldClass = variant === 'light'
+    ? 'w-full bg-white border border-border px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:border-gold transition-colors'
+    : 'w-full bg-white/5 border border-white/15 px-4 py-3 text-sm placeholder:text-white/40 focus:outline-none focus:border-gold transition-colors';
+  const errorClass = variant === 'light' ? 'text-red-600 text-xs mt-1' : 'text-red-400 text-xs mt-1';
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
@@ -45,15 +48,15 @@ export function InquiryForm({ propertyId, propertyTitle }: Props) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <input {...register('name')} placeholder="Full name" className={fieldClass} />
-        {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name.message}</p>}
+        {errors.name && <p className={errorClass}>{errors.name.message}</p>}
       </div>
       <div>
         <input {...register('email')} type="email" placeholder="Email" className={fieldClass} />
-        {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
+        {errors.email && <p className={errorClass}>{errors.email.message}</p>}
       </div>
       <div>
         <input {...register('phone')} placeholder="Phone" className={fieldClass} />
-        {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone.message}</p>}
+        {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
       </div>
       <textarea {...register('message')} rows={3} placeholder="Preferred viewing time" className={`${fieldClass} resize-none`} />
       <button type="submit" disabled={isSubmitting} className="btn-gold w-full disabled:opacity-60">

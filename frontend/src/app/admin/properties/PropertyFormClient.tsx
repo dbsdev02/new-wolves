@@ -1,16 +1,17 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { propertyService } from '@/services/propertyService';
-import { useCommunities, useDevelopers, useAgents } from '@/hooks/useContent';
+import { useCommunities, useDevelopers, useAgents, useAmenities } from '@/hooks/useContent';
+import { ImageUploadField } from '@/components/admin/ImageUploadField';
+import { getMediaUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { HiArrowLeft } from 'react-icons/hi';
-import api from '@/lib/api';
+import { HiArrowLeft, HiX } from 'react-icons/hi';
 
 const schema = z.object({
   title: z.string().min(5),
@@ -22,11 +23,13 @@ const schema = z.object({
   price: z.number().positive(),
   currency: z.string().default('AED'),
   area_sqft: z.number().positive(),
-  bedrooms: z.number().min(0),
+  min_bedrooms: z.number().min(0),
+  max_bedrooms: z.number().min(0),
   bathrooms: z.number().min(0),
   parking_spaces: z.number().min(0).default(0),
   address: z.string().min(5),
   city: z.string().default('Dubai'),
+  dld_permit_number: z.string().optional(),
   community: z.number().optional().nullable(),
   developer: z.number().optional().nullable(),
   agent: z.number().optional().nullable(),
@@ -38,32 +41,37 @@ const schema = z.object({
   meta_description: z.string().optional(),
   video_url: z.string().optional(),
   virtual_tour_url: z.string().optional(),
-  latitude: z.number().optional().nullable(),
-  longitude: z.number().optional().nullable(),
+  google_maps_url: z.string().optional(),
+}).refine((data) => data.max_bedrooms >= data.min_bedrooms, {
+  message: 'Max bedrooms must be greater than or equal to min bedrooms',
+  path: ['max_bedrooms'],
 });
 
 type FormData = z.infer<typeof schema>;
 
-interface Props { propertyId?: number }
+interface Props { slug?: string }
 
-export function PropertyFormClient({ propertyId }: Props) {
+export function PropertyFormClient({ slug }: Props) {
   const router = useRouter();
   const qc = useQueryClient();
-  const isEdit = !!propertyId;
+  const isEdit = !!slug;
 
   const { data: communities } = useCommunities({ page_size: 200 });
   const { data: developers } = useDevelopers({ page_size: 200 });
   const { data: agents } = useAgents({ page_size: 200 });
+  const { data: amenities } = useAmenities();
+  const [selectedAmenities, setSelectedAmenities] = useState<number[]>([]);
+  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
 
   const { data: existingProperty } = useQuery({
-    queryKey: ['property-edit', propertyId],
-    queryFn: () => api.get(`/properties/${propertyId}/`).then(r => r.data),
+    queryKey: ['property-edit', slug],
+    queryFn: () => propertyService.getBySlug(slug!).then(r => r.data as any),
     enabled: isEdit,
   });
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { currency: 'AED', city: 'Dubai', bedrooms: 0, bathrooms: 0, parking_spaces: 0 },
+    defaultValues: { currency: 'AED', city: 'Dubai', min_bedrooms: 0, max_bedrooms: 0, bathrooms: 0, parking_spaces: 0 },
   });
 
   useEffect(() => {
@@ -76,8 +84,13 @@ export function PropertyFormClient({ propertyId }: Props) {
         price: Number(existingProperty.price),
         area_sqft: Number(existingProperty.area_sqft),
       });
+      setSelectedAmenities((existingProperty.amenities || []).map((a: any) => a.id));
     }
   }, [existingProperty, reset]);
+
+  const toggleAmenity = (id: number) => {
+    setSelectedAmenities((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  };
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -85,6 +98,12 @@ export function PropertyFormClient({ propertyId }: Props) {
       Object.entries(data).forEach(([k, v]) => {
         if (v !== null && v !== undefined && v !== '') formData.append(k, String(v));
       });
+      if (selectedAmenities.length > 0) {
+        selectedAmenities.forEach((id) => formData.append('amenity_ids', String(id)));
+      } else if (isEdit) {
+        formData.append('clear_amenities', 'true');
+      }
+      if (featuredImage) formData.append('featured_image', featuredImage);
       if (isEdit) {
         return propertyService.update(existingProperty.slug, formData);
       }
@@ -99,6 +118,57 @@ export function PropertyFormClient({ propertyId }: Props) {
   });
 
   const onSubmit = (data: FormData) => mutation.mutate(data);
+
+  const uploadGalleryMutation = useMutation({
+    mutationFn: (files: FileList) => {
+      const fd = new FormData();
+      Array.from(files).forEach((f) => fd.append('images', f));
+      return propertyService.uploadImages(existingProperty.slug, fd);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['property-edit', slug] });
+      toast.success('Photos added to gallery.');
+    },
+    onError: () => toast.error('Failed to upload gallery photos.'),
+  });
+
+  const deleteGalleryImageMutation = useMutation({
+    mutationFn: (imageId: number) => propertyService.deleteImage(existingProperty.slug, imageId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['property-edit', slug] });
+      toast.success('Photo removed.');
+    },
+    onError: () => toast.error('Failed to remove photo.'),
+  });
+
+  const [floorPlanTitle, setFloorPlanTitle] = useState('');
+  const [floorPlanImage, setFloorPlanImage] = useState<File | null>(null);
+  const [floorPlanPdf, setFloorPlanPdf] = useState<File | null>(null);
+
+  const addFloorPlanMutation = useMutation({
+    mutationFn: () => {
+      const fd = new FormData();
+      fd.append('title', floorPlanTitle || 'Floor Plan');
+      if (floorPlanImage) fd.append('image', floorPlanImage);
+      if (floorPlanPdf) fd.append('pdf', floorPlanPdf);
+      return propertyService.addFloorPlan(existingProperty.slug, fd);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['property-edit', slug] });
+      toast.success('Floor plan added.');
+      setFloorPlanTitle(''); setFloorPlanImage(null); setFloorPlanPdf(null);
+    },
+    onError: () => toast.error('Failed to add floor plan — provide an image or a PDF.'),
+  });
+
+  const deleteFloorPlanMutation = useMutation({
+    mutationFn: (planId: number) => propertyService.deleteFloorPlan(existingProperty.slug, planId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['property-edit', slug] });
+      toast.success('Floor plan removed.');
+    },
+    onError: () => toast.error('Failed to remove floor plan.'),
+  });
 
   const fieldClass = 'input-luxury text-sm';
   const labelClass = 'label-luxury';
@@ -169,6 +239,108 @@ export function PropertyFormClient({ propertyId }: Props) {
           </div>
         </div>
 
+        {/* Media */}
+        <div className="bg-white border border-gray-100 p-6 space-y-5">
+          <h2 className="font-display font-bold text-lg border-b border-gray-100 pb-3">Media</h2>
+          <ImageUploadField
+            label="Featured Image"
+            file={featuredImage}
+            onChange={setFeaturedImage}
+            existingUrl={existingProperty?.featured_image}
+          />
+
+          <div>
+            <label className={labelClass}>Gallery Photos</label>
+            {isEdit ? (
+              <>
+                {existingProperty?.images?.length > 0 && (
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-3 mb-3">
+                    {existingProperty.images.map((img: any) => (
+                      <div key={img.id} className="relative aspect-square bg-gray-100 group overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={getMediaUrl(img.image)} alt="" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => deleteGalleryImageMutation.mutate(img.id)}
+                          className="absolute top-1 right-1 bg-black/60 text-white p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <HiX className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => { if (e.target.files?.length) uploadGalleryMutation.mutate(e.target.files); e.target.value = ''; }}
+                  className={fieldClass}
+                />
+              </>
+            ) : (
+              <p className="text-xs text-gray-400">Save the property first, then come back here to add gallery photos.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Floor Plans */}
+        <div className="bg-white border border-gray-100 p-6 space-y-5">
+          <h2 className="font-display font-bold text-lg border-b border-gray-100 pb-3">Floor Plans</h2>
+          {isEdit ? (
+            <>
+              {existingProperty?.floor_plans?.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                  {existingProperty.floor_plans.map((fp: any) => (
+                    <div key={fp.id} className="flex items-center justify-between gap-3 border border-gray-100 p-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-luxury-black truncate">{fp.title}</p>
+                        <div className="flex gap-3 mt-1 text-xs">
+                          {fp.image && <a href={getMediaUrl(fp.image)} target="_blank" rel="noopener noreferrer" className="text-gold hover:underline">View Image</a>}
+                          {fp.pdf && <a href={getMediaUrl(fp.pdf)} target="_blank" rel="noopener noreferrer" className="text-gold hover:underline">View PDF</a>}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => deleteFloorPlanMutation.mutate(fp.id)}
+                        className="p-1.5 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                      >
+                        <HiX className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClass}>Title</label>
+                  <input value={floorPlanTitle} onChange={(e) => setFloorPlanTitle(e.target.value)} className={fieldClass} placeholder="e.g. 2 Bedroom Type A" />
+                </div>
+                <div>
+                  <label className={labelClass}>Image</label>
+                  <input type="file" accept="image/*" onChange={(e) => setFloorPlanImage(e.target.files?.[0] || null)} className={fieldClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>PDF</label>
+                  <input type="file" accept="application/pdf" onChange={(e) => setFloorPlanPdf(e.target.files?.[0] || null)} className={fieldClass} />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    disabled={addFloorPlanMutation.isPending || (!floorPlanImage && !floorPlanPdf)}
+                    onClick={() => addFloorPlanMutation.mutate()}
+                    className="btn-gold w-full py-2.5 disabled:opacity-50"
+                  >
+                    {addFloorPlanMutation.isPending ? 'Adding...' : 'Add Floor Plan'}
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-xs text-gray-400">Save the property first, then come back here to add floor plans.</p>
+          )}
+        </div>
+
         {/* Pricing */}
         <div className="bg-white border border-gray-100 p-6 space-y-5">
           <h2 className="font-display font-bold text-lg border-b border-gray-100 pb-3">Pricing</h2>
@@ -193,10 +365,15 @@ export function PropertyFormClient({ propertyId }: Props) {
         {/* Specs */}
         <div className="bg-white border border-gray-100 p-6 space-y-5">
           <h2 className="font-display font-bold text-lg border-b border-gray-100 pb-3">Property Specifications</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
             <div>
-              <label className={labelClass}>Bedrooms *</label>
-              <input {...register('bedrooms', { valueAsNumber: true })} type="number" min={0} className={fieldClass} />
+              <label className={labelClass}>Min Bedrooms *</label>
+              <input {...register('min_bedrooms', { valueAsNumber: true })} type="number" min={0} className={fieldClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Max Bedrooms *</label>
+              <input {...register('max_bedrooms', { valueAsNumber: true })} type="number" min={0} className={fieldClass} />
+              {errors.max_bedrooms && <p className="text-red-500 text-xs mt-1">{errors.max_bedrooms.message}</p>}
             </div>
             <div>
               <label className={labelClass}>Bathrooms *</label>
@@ -221,6 +398,10 @@ export function PropertyFormClient({ propertyId }: Props) {
             <label className={labelClass}>Address *</label>
             <input {...register('address')} className={fieldClass} placeholder="Full address" />
           </div>
+          <div>
+            <label className={labelClass}>DLD Permit Number</label>
+            <input {...register('dld_permit_number')} className={fieldClass} placeholder="e.g. 65449649338" />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
               <label className={labelClass}>City</label>
@@ -241,16 +422,36 @@ export function PropertyFormClient({ propertyId }: Props) {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-5">
-            <div>
-              <label className={labelClass}>Latitude</label>
-              <input {...register('latitude', { valueAsNumber: true })} type="number" step="any" className={fieldClass} placeholder="25.2048" />
-            </div>
-            <div>
-              <label className={labelClass}>Longitude</label>
-              <input {...register('longitude', { valueAsNumber: true })} type="number" step="any" className={fieldClass} placeholder="55.2708" />
-            </div>
+          <div>
+            <label className={labelClass}>Google Maps URL</label>
+            <input {...register('google_maps_url')} className={fieldClass} placeholder="https://www.google.com/maps/place/..." />
+            <p className="text-xs text-gray-400 mt-1">Paste a Google Maps link (from the &ldquo;Share&rdquo; button, not a shortened one) — the pin location is extracted automatically.</p>
           </div>
+        </div>
+
+        {/* Amenities */}
+        <div className="bg-white border border-gray-100 p-6 space-y-5">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+            <h2 className="font-display font-bold text-lg">Amenities</h2>
+            <Link href="/admin/amenities" target="_blank" className="text-xs text-gold hover:underline">Manage amenities list →</Link>
+          </div>
+          {(amenities as any[])?.length ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {(amenities as any[]).map((a: any) => (
+                <label key={a.id} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    className="accent-gold w-4 h-4"
+                    checked={selectedAmenities.includes(a.id)}
+                    onChange={() => toggleAmenity(a.id)}
+                  />
+                  {a.name}
+                </label>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">No amenities yet — add some in the Amenities section first.</p>
+          )}
         </div>
 
         {/* Agent & Flags */}

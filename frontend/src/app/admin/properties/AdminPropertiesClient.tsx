@@ -137,7 +137,7 @@ export function AdminPropertiesClient() {
                           <Link href={`/properties/${property.slug}`} target="_blank" className="p-2 text-gray-400 hover:text-gold transition-colors">
                             <HiEye className="w-4 h-4" />
                           </Link>
-                          <Link href={`/admin/properties/${property.id}`} className="p-2 text-gray-400 hover:text-gold transition-colors">
+                          <Link href={`/admin/properties/${property.slug}`} className="p-2 text-gray-400 hover:text-gold transition-colors">
                             <HiPencil className="w-4 h-4" />
                           </Link>
                           <button

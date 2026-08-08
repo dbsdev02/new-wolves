@@ -11,6 +11,8 @@ class LeadCreateSerializer(serializers.ModelSerializer):
             'loan_amount', 'down_payment', 'employment_type',
             'position', 'resume', 'experience_years', 'is_newsletter',
             'utm_source', 'utm_medium', 'utm_campaign',
+            'submitted_property_type', 'submitted_purpose', 'submitted_address',
+            'submitted_bedrooms', 'submitted_bathrooms', 'submitted_area_sqft', 'asking_price',
         ]
 
     def create(self, validated_data):

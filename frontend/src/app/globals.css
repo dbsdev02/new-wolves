@@ -4,61 +4,41 @@
 
 @layer base {
   :root {
-    --ink: #0D0D0D;
-    --ink-soft: #1C1C1C;
-    --ink-muted: #2E2E2E;
-    --cream: #FAF8F4;
-    --cream-dark: #F2EFE9;
+    --ink: #000219;
+    --ink-soft: #000857;
+    --ink-muted: #0B2339;
+    --cream: #E6E7F5;
+    --cream-dark: #DEE0F0;
     --white: #FFFFFF;
 
-    --gold: #C9A84C;
-    --gold-soft: #E2C97E;
-    --gold-deep: #A07830;
-    --gold-pale: #F5EDD6;
+    --gold: #E1B77E;
+    --gold-soft: #E7C598;
+    --gold-deep: #CDA773;
+    --gold-pale: #F8EFE3;
 
-    --border: #E8E4DC;
-    --muted: #8A8680;
+    --border: #EEEEEE;
+    --muted: #737575;
 
     /* Tailwind-compatible aliases */
-    --background: #FFFFFF;
-    --foreground: #0D0D0D;
-    --muted-foreground: #8A8680;
-    --card: #FFFFFF;
-    --card-foreground: #0D0D0D;
-    --popover: #FFFFFF;
-    --popover-foreground: #0D0D0D;
-    --primary: #A07830;
-    --primary-foreground: #FFFFFF;
-    --secondary: #FAF8F4;
-    --secondary-foreground: #0D0D0D;
-    --accent: #F2EFE9;
-    --accent-foreground: #0D0D0D;
+    --background: var(--white);
+    --foreground: var(--ink);
+    --muted-foreground: var(--muted);
+    --card: var(--white);
+    --card-foreground: var(--ink);
+    --popover: var(--white);
+    --popover-foreground: var(--ink);
+    --primary: var(--gold-deep);
+    --primary-foreground: var(--white);
+    --secondary: var(--cream);
+    --secondary-foreground: var(--ink);
+    --accent: var(--cream-dark);
+    --accent-foreground: var(--ink);
     --destructive: #ef4444;
-    --destructive-foreground: #FFFFFF;
-    --input: #E8E4DC;
-    --ring: #C9A84C;
+    --destructive-foreground: var(--white);
+    --input: var(--border);
+    --ring: var(--gold);
     --radius: 0rem;
   }
-
-  /* Tailwind-compatible aliases */
-  --background: var(--white);
-  --foreground: var(--ink);
-  --muted-foreground: var(--muted);
-  --card: var(--white);
-  --card-foreground: var(--ink);
-  --popover: var(--white);
-  --popover-foreground: var(--ink);
-  --primary: var(--gold-deep);
-  --primary-foreground: var(--white);
-  --secondary: var(--cream);
-  --secondary-foreground: var(--ink);
-  --accent: var(--cream-dark);
-  --accent-foreground: var(--ink);
-  --destructive: #ef4444;
-  --destructive-foreground: var(--white);
-  --input: var(--border);
-  --ring: var(--gold);
-  --radius: 0rem;
 }
 
 @layer base {
@@ -81,7 +61,7 @@
     line-height: 1.05;
   }
 
-  ::selection { background: rgba(201, 168, 76, 0.25); }
+  ::selection { background: rgba(225, 183, 126, 0.25); }
 
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: var(--cream); }
@@ -95,12 +75,12 @@
     @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 text-white font-semibold text-[0.7rem] tracking-[0.2em] uppercase rounded-none;
     background: var(--gold-deep);
     transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
-    box-shadow: 0 4px 20px rgba(160, 120, 48, 0.25);
+    box-shadow: 0 4px 20px rgba(205, 167, 115, 0.25);
   }
   .btn-gold:hover {
     background: var(--gold);
     transform: translateY(-1px);
-    box-shadow: 0 8px 30px rgba(160, 120, 48, 0.35);
+    box-shadow: 0 8px 30px rgba(205, 167, 115, 0.35);
   }
 
   .btn-outline {
@@ -292,7 +272,7 @@
   }
 
   .bg-pattern {
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A84C' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23E1B77E' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
 
   .text-ink { color: var(--ink); }

@@ -95,7 +95,7 @@ export function AdminBlogsClient() {
                           <Link href={`/blogs/${blog.slug}`} target="_blank" className="p-1.5 text-gray-400 hover:text-gold transition-colors">
                             <HiEye className="w-4 h-4" />
                           </Link>
-                          <Link href={`/admin/blogs/${blog.id}`} className="p-1.5 text-gray-400 hover:text-gold transition-colors">
+                          <Link href={`/admin/blogs/${blog.slug}`} className="p-1.5 text-gray-400 hover:text-gold transition-colors">
                             <HiPencil className="w-4 h-4" />
                           </Link>
                           <button onClick={() => confirm(`Delete "${blog.title}"?`) && deleteMutation.mutate(blog.slug)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">

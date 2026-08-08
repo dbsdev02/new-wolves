@@ -7,5 +7,5 @@ export const metadata: Metadata = { title: 'Edit Blog Post - Admin' };
 
 export default async function EditBlogPage({ params }: Props) {
   const { id } = await params;
-  return <BlogFormClient blogId={Number(id)} />;
+  return <BlogFormClient slug={id} />;
 }

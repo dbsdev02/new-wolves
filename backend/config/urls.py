@@ -1,7 +1,7 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
-from django.conf.urls.static import static
+from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 api_v1 = [
@@ -17,6 +17,7 @@ api_v1 = [
     path('settings/', include('apps.settings_app.urls')),
     path('testimonials/', include('apps.testimonials.urls')),
     path('faqs/', include('apps.faqs.urls')),
+    path('news/', include('apps.news.urls')),
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
@@ -25,4 +26,7 @@ api_v1 = [
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include(api_v1)),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Served unconditionally (not gated by DEBUG) — cPanel/Passenger hosting
+    # has no separate web server in front serving /media/, so Django has to.
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]

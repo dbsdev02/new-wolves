@@ -13,7 +13,7 @@ export function MarketReportSection() {
             alt="UAE Real Estate Sentiment Report"
             className="absolute inset-0 h-full w-full object-cover"
           />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(13,13,13,0.25) 0%, transparent 60%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(0,2,25,0.25) 0%, transparent 60%)' }} />
           {/* Floating card */}
           <div
             className="absolute bottom-6 left-6 px-6 py-5 max-w-[220px]"

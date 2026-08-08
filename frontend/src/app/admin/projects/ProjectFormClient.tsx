@@ -1,16 +1,16 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectService } from '@/services/contentService';
 import { useCommunities, useDevelopers } from '@/hooks/useContent';
+import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { HiArrowLeft } from 'react-icons/hi';
-import api from '@/lib/api';
 
-interface Props { projectId?: number }
+interface Props { slug?: string }
 
 interface ProjectFormValues {
   name: string;
@@ -33,17 +33,19 @@ interface ProjectFormValues {
   is_active: boolean;
 }
 
-export function ProjectFormClient({ projectId }: Props) {
+export function ProjectFormClient({ slug }: Props) {
   const router = useRouter();
   const qc = useQueryClient();
-  const isEdit = !!projectId;
+  const isEdit = !!slug;
+  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
 
   const { data: communities } = useCommunities({ page_size: 200 });
   const { data: developers } = useDevelopers({ page_size: 200 });
 
   const { data: existing } = useQuery({
-    queryKey: ['project-edit', projectId],
-    queryFn: () => api.get(`/projects/${projectId}/`).then(r => r.data),
+    queryKey: ['project-edit', slug],
+    queryFn: () => projectService.getBySlug(slug!).then(r => r.data as any),
     enabled: isEdit,
   });
 
@@ -59,6 +61,8 @@ export function ProjectFormClient({ projectId }: Props) {
     mutationFn: async (data: any) => {
       const fd = new FormData();
       Object.entries(data).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== '') fd.append(k, String(v)); });
+      if (featuredImage) fd.append('featured_image', featuredImage);
+      if (coverImage) fd.append('cover_image', coverImage);
       if (isEdit) return projectService.update(existing.slug, fd);
       return projectService.create(fd);
     },
@@ -164,6 +168,10 @@ export function ProjectFormClient({ projectId }: Props) {
 
         <div className="bg-white border border-gray-100 p-6 space-y-5">
           <h2 className="font-display font-bold text-lg border-b border-gray-100 pb-3">Location & Media</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <ImageUploadField label="Featured Image" file={featuredImage} onChange={setFeaturedImage} existingUrl={existing?.featured_image} />
+            <ImageUploadField label="Cover Image" file={coverImage} onChange={setCoverImage} existingUrl={existing?.cover_image} />
+          </div>
           <div>
             <label className={labelClass}>Address</label>
             <input {...register('address')} className={fieldClass} />

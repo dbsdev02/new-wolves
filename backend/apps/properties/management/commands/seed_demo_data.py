@@ -11,6 +11,7 @@ from apps.blogs.models import Blog, BlogCategory, BlogTag
 from apps.communities.models import Community
 from apps.developers.models import Developer
 from apps.faqs.models import FAQ
+from apps.news.models import NewsItem, TickerStat
 from apps.projects.models import Project
 from apps.properties.models import (
     Amenity, NearbyPlace, PaymentPlan, Property,
@@ -62,12 +63,67 @@ DEVELOPERS = [
 ]
 
 AMENITIES = [
+    # Core
     ('Swimming Pool', 'pool'), ('Gymnasium', 'gym'), ('Covered Parking', 'parking'),
     ('24/7 Security', 'security'), ('Kids Play Area', 'kids'), ('BBQ Area', 'bbq'),
     ('Concierge Service', 'concierge'), ('Private Beach Access', 'beach'),
     ('Sauna & Steam Room', 'sauna'), ('Landscaped Gardens', 'garden'),
     ('Retail Outlets', 'retail'), ('Pet Friendly', 'pets'), ('Smart Home System', 'smart'),
     ('Business Center', 'business'), ('Tennis Court', 'tennis'),
+    # Religious & Community
+    ("Jame'e Mosque", 'religious'), ('Mosque', 'religious'),
+    ('Community Centre', 'community'), ('Community Gardening', 'community'),
+    ('Greenhouse', 'community'), ('Vegetable Gardening', 'community'),
+    ('Pet Park', 'community'), ('Community Facilities', 'community'),
+    # Parks & Outdoors
+    ('Picnic Areas', 'outdoor'), ('Boulevard', 'outdoor'), ('Spine Park', 'outdoor'),
+    ('Green Gate Park', 'outdoor'), ('Landscape Parks', 'outdoor'), ('Central Plaza', 'outdoor'),
+    ('Ghaf Forest', 'outdoor'), ('Botanical Garden', 'outdoor'), ('Lush Gardens', 'outdoor'),
+    ('Landscaped Links', 'outdoor'), ('Gazebo', 'outdoor'), ('Terrace', 'outdoor'),
+    ('Sunken Seating', 'outdoor'), ('Outdoor Seating', 'outdoor'),
+    ('Shaded Seating Area', 'outdoor'), ('Outdoor Shower', 'outdoor'),
+    ('Outdoor Showers', 'outdoor'), ('Changing Room', 'outdoor'),
+    # Retail & Services
+    ('Gas Station', 'retail'), ('Mall', 'retail'), ('Neighbourhood Mall', 'retail'),
+    ('Retail / F&B', 'retail'), ('Retail Spaces', 'retail'),
+    ('Medical Clinic', 'services'), ('Healthcare Centre', 'services'),
+    ('Hospital', 'services'), ('School', 'services'), ('Business Park', 'services'),
+    # Dining & Entertainment
+    ('Outdoor Dining', 'dining'), ('Private Dinning', 'dining'),
+    ('Island Restaurant', 'dining'), ('Portofino Restaurant', 'dining'),
+    ('Live Cooking Classes / BBQ', 'dining'), ('Cafe', 'dining'),
+    ('Private Dining Area', 'dining'), ('Elegant Banquet Venue', 'dining'),
+    ('Signature Bar', 'dining'), ('Cigar Lounge', 'dining'),
+    ('Opera', 'entertainment'), ('Floating Opera', 'entertainment'),
+    ('Floating Cinema', 'entertainment'), ('Open Sky Cinema', 'entertainment'),
+    ('Open-Air Cinema', 'entertainment'), ('Amphitheatre / Lawn', 'entertainment'),
+    ('Vibrant Deck', 'entertainment'), ('Opal Chess Haven', 'entertainment'),
+    ('Gaming Lounge', 'entertainment'), ('Ping Pong', 'entertainment'),
+    ('Table Tennis', 'entertainment'), ('Golf Simulator Suite', 'entertainment'),
+    # Sports & Fitness
+    ('Skate Park', 'sports'), ('Multi-Sport Courts', 'sports'), ('Sports Court', 'sports'),
+    ('Sports Club', 'sports'), ('Callisthenics Stations', 'sports'),
+    ('Open-Air Workout Area', 'sports'), ('Open-Air Workout Areas', 'sports'),
+    ('Outdoor CrossFit', 'sports'), ('Hydroponic Farm', 'sports'),
+    ('Kidz Adventure Land', 'sports'),
+    # Pool & Water
+    ('Private Infinity Pool', 'pool'), ('The Canal Pool', 'pool'), ('Kids Pool', 'pool'),
+    ('Spa Pool', 'pool'), ('Aqua Oasis', 'pool'), ('Malibu Cove', 'pool'),
+    ('Water Slide', 'pool'), ('Pool Deck with Sun Loungers', 'pool'),
+    ('Floating Cabanas', 'pool'), ('Sand Oasis', 'pool'),
+    # Waterfront
+    ('Waterfront Promenade', 'waterfront'), ('Marina Promenade', 'waterfront'),
+    ('Waterway', 'waterfront'), ('Lagoon', 'waterfront'), ('Marina', 'waterfront'),
+    ('Beach Town', 'waterfront'), ('Queen Elizabeth 2', 'waterfront'),
+    ('5 Star Resort', 'waterfront'),
+    # Wellness & Spa
+    ('Spa', 'wellness'), ('Spa & Wellness Centre', 'wellness'), ('Steam Room', 'wellness'),
+    ('Sauna / Steam', 'wellness'), ('Zen Garden', 'wellness'),
+    ('Meditation Nest', 'wellness'), ('Zen Meditation Pavilion', 'wellness'),
+    ('Essential Oils Lake', 'wellness'),
+    # Clubhouse & Lounges
+    ('Clubhouse', 'clubhouse'), ("Owner's Lounge", 'clubhouse'),
+    ('Private Lounge', 'clubhouse'), ('Meeting Room', 'clubhouse'),
 ]
 
 PROPERTY_TITLES = [
@@ -92,6 +148,20 @@ FAQS = [
     ('What is the rental yield in Dubai?', 'Dubai offers competitive rental yields, typically ranging from 5-9% depending on the community and property type.'),
     ('Is there property tax in Dubai?', 'Dubai has no annual property tax. Owners only pay a one-time transfer fee and periodic service charges.'),
     ('How long does the buying process take?', 'A standard resale transaction typically takes 2-4 weeks from offer acceptance to title deed transfer.'),
+]
+
+NEWS_ITEMS = [
+    'Dubai property market stays resilient in H1 2026',
+    'Luxury real estate investment continues to rise',
+    'Investor confidence remains strong across Dubai',
+    'Off-plan sales hit new quarterly high',
+    'Golden Visa demand fuels premium villa sales',
+]
+
+TICKER_STATS = [
+    ('Total Sales', '1.02B'),
+    ('Total Mortgaged', '205.35M'),
+    ('Gifts', '141.43M'),
 ]
 
 TESTIMONIALS = [
@@ -128,6 +198,8 @@ class Command(BaseCommand):
             BlogTag.objects.all().delete()
             Testimonial.objects.all().delete()
             FAQ.objects.all().delete()
+            NewsItem.objects.all().delete()
+            TickerStat.objects.all().delete()
             Amenity.objects.all().delete()
 
         self.create_superuser()
@@ -141,6 +213,7 @@ class Command(BaseCommand):
         self.create_blogs()
         self.create_testimonials()
         self.create_faqs()
+        self.create_news()
         self.create_site_settings()
         self.create_seo_pages()
         self.create_redirects()
@@ -291,7 +364,8 @@ class Command(BaseCommand):
             agent = rng.choice(agents)
             purpose = rng.choice(purposes)
             ptype = rng.choice(property_types)
-            bedrooms = 0 if ptype == 'studio' else rng.randint(1, 6)
+            min_bedrooms = 0 if ptype == 'studio' else rng.randint(1, 6)
+            max_bedrooms = min_bedrooms if ptype == 'studio' else min_bedrooms + rng.randint(0, 6 - min_bedrooms)
             price = rng.randint(60, 200) * 10000 if purpose == 'rent' else rng.randint(80, 1500) * 10000
 
             prop, created = Property.objects.get_or_create(
@@ -309,8 +383,9 @@ class Command(BaseCommand):
                     community=community,
                     developer=developer,
                     agent=agent,
-                    bedrooms=bedrooms,
-                    bathrooms=max(1, bedrooms),
+                    min_bedrooms=min_bedrooms,
+                    max_bedrooms=max_bedrooms,
+                    bathrooms=max(1, max_bedrooms),
                     area_sqft=rng.randint(500, 8000),
                     parking_spaces=rng.randint(1, 3),
                     furnishing=rng.choice(['furnished', 'semi_furnished', 'unfurnished']),
@@ -437,6 +512,16 @@ class Command(BaseCommand):
             if created:
                 count += 1
         self.stdout.write(self.style.SUCCESS(f'FAQs: {count}'))
+
+    def create_news(self):
+        count = 0
+        for i, headline in enumerate(NEWS_ITEMS):
+            _, created = NewsItem.objects.get_or_create(headline=headline, defaults=dict(order=i))
+            if created:
+                count += 1
+        for i, (label, value) in enumerate(TICKER_STATS):
+            TickerStat.objects.get_or_create(label=label, defaults=dict(value=value, order=i))
+        self.stdout.write(self.style.SUCCESS(f'News items: {count}'))
 
     def create_site_settings(self):
         settings = SiteSettings.get_settings()

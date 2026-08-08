@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { developerService, communityService, projectService, agentService, blogService, testimonialService, faqService } from '@/services/contentService';
+import { developerService, communityService, projectService, agentService, blogService, testimonialService, faqService, newsItemService, tickerStatService } from '@/services/contentService';
+import { amenityService } from '@/services/propertyService';
 import { settingsService } from '@/services';
 
 export const useDevelopers = (params?: Record<string, unknown>) =>
@@ -49,6 +50,15 @@ export const useTestimonials = () =>
 
 export const useFAQs = (params?: Record<string, unknown>) =>
   useQuery({ queryKey: ['faqs', params], queryFn: () => faqService.getAll(params).then(r => r.data), staleTime: 30 * 60 * 1000 });
+
+export const useAmenities = () =>
+  useQuery({ queryKey: ['amenities'], queryFn: () => amenityService.getAll().then(r => r.data), staleTime: 10 * 60 * 1000 });
+
+export const useNewsItems = () =>
+  useQuery({ queryKey: ['news-items'], queryFn: () => newsItemService.getAll().then(r => r.data), staleTime: 5 * 60 * 1000 });
+
+export const useTickerStats = () =>
+  useQuery({ queryKey: ['ticker-stats'], queryFn: () => tickerStatService.getAll().then(r => r.data), staleTime: 5 * 60 * 1000 });
 
 export const useSiteSettings = () =>
   useQuery({ queryKey: ['site-settings'], queryFn: () => settingsService.get().then(r => r.data), staleTime: 30 * 60 * 1000 });

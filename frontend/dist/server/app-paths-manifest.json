@@ -1,0 +1,7 @@
+{
+  "/(website)/page": "app/(website)/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(website)/compare/page": "app/(website)/compare/page.js",
+  "/(website)/properties/page": "app/(website)/properties/page.js",
+  "/(website)/wishlist/page": "app/(website)/wishlist/page.js"
+}

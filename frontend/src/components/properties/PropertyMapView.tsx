@@ -9,7 +9,7 @@ import { formatPrice, getMediaUrl } from '@/lib/utils';
 
 const markerIcon = L.divIcon({
   className: 'property-map-marker',
-  html: '<div style="background:#c5a059;color:#0a0a0a;padding:4px 10px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);border-radius:2px;">●</div>',
+  html: '<div style="background:#E1B77E;color:#000219;padding:4px 10px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);border-radius:2px;">●</div>',
   iconSize: [20, 20],
   iconAnchor: [10, 10],
 });
