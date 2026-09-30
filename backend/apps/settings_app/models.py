@@ -13,11 +13,15 @@ class SiteSettings(models.Model):
     # Contact
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
+    toll_free_number = models.CharField(max_length=20, blank=True)
     whatsapp = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100, default='Dubai')
     country = models.CharField(max_length=100, default='UAE')
-    google_maps_url = models.URLField(blank=True)
+    # URLField defaults to max_length=200 — real Google Maps share links
+    # (with encoded place IDs, coordinates, zoom, data params) routinely
+    # exceed that and get silently rejected on save.
+    google_maps_url = models.URLField(blank=True, max_length=1000)
     google_maps_embed = models.TextField(blank=True)
 
     # Social

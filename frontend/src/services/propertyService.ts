@@ -40,6 +40,9 @@ export const propertyService = {
 
   deleteFloorPlan: (slug: string, planId: number) =>
     api.delete(`/properties/${slug}/floor-plans/${planId}/`),
+
+  bulkAction: (ids: number[], action: string) =>
+    api.post<{ detail: string; count: number }>('/properties/bulk_action/', { ids, action }),
 };
 
 export const amenityService = {

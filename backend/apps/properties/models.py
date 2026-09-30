@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth import get_user_model
-from .utils import extract_coordinates_from_maps_url
+from .utils import extract_coordinates_from_maps_url, resolve_maps_url
 
 User = get_user_model()
 
@@ -21,7 +21,10 @@ class Amenity(models.Model):
 
 
 class Property(models.Model):
-    PURPOSE_CHOICES = [('sale', 'For Sale'), ('rent', 'For Rent'), ('off_plan', 'Off Plan')]
+    PURPOSE_CHOICES = [
+        ('sale', 'For Sale'), ('rent', 'For Rent'), ('off_plan', 'Off Plan'),
+        ('resale', 'Resale/Ready to Move'), ('rental', 'Rental'),
+    ]
     STATUS_CHOICES = [
         ('draft', 'Draft'), ('published', 'Published'),
         ('archived', 'Archived'), ('sold', 'Sold'), ('rented', 'Rented'),
@@ -31,8 +34,43 @@ class Property(models.Model):
         ('penthouse', 'Penthouse'), ('duplex', 'Duplex'), ('studio', 'Studio'),
         ('office', 'Office'), ('retail', 'Retail'), ('warehouse', 'Warehouse'),
         ('land', 'Land'), ('building', 'Building'),
+        ('office_space', 'Office Space'), ('mansion', 'Mansion'),
+        ('residential', 'Residential'), ('office_units', 'Office Units'),
+        ('commercial', 'Commercial'),
+    ]
+    NEARBY_AREA_CHOICES = [
+        ('rak_international_airport', 'RAK International Airport'),
+        ('al_maktoum_international_airport', 'Al Maktoum International Airport'),
+        ('miracle_garden', 'Miracle Garden'),
+        ('sharjah_international_airport', 'Sharjah International Airport'),
+        ('dubai_international_airport', 'Dubai International Airport'),
+        ('dubai_hills_mall', 'Dubai Hills Mall'),
+        ('rak_central', 'RAK Central'),
+        ('burj_khalifa', 'Burj Khalifa'),
+        ('deira', 'Deira'),
+        ('yas_island', 'Yas Island'),
+        ('saadiyat_island', 'Saadiyat Island'),
+        ('zayed_international_airport', 'Zayed International Airport'),
+        ('abu_dhabi_city', 'Abu Dhabi City'),
+        ('dubai', 'Dubai'),
+        ('maritime_city', 'Maritime City'),
+        ('jvc', 'JVC'),
+        ('business_bay', 'Business Bay'),
+        ('downtown', 'Downtown'),
+        ('palm_jumeirah', 'Palm Jumeirah'),
+        ('dubai_islands', 'Dubai Islands'),
+        ('dubai_creek_harbour', 'Dubai Creek Harbour'),
+        ('city_walk', 'City Walk'),
+        ('dubai_south', 'Dubai South'),
+        ('palm_jebel_ali', 'Palm Jebel Ali'),
     ]
     CURRENCY_CHOICES = [('AED', 'AED'), ('USD', 'USD'), ('EUR', 'EUR'), ('GBP', 'GBP')]
+    CITY_CHOICES = [
+        ('Abu Dhabi', 'Abu Dhabi'), ('Ajman', 'Ajman'), ('Dubai', 'Dubai'),
+        ('Dubailand', 'Dubailand'), ('Palm Jumeirah', 'Palm Jumeirah'),
+        ('Ras Al Khaimah, UAE', 'Ras Al Khaimah, UAE'), ('Sharjah', 'Sharjah'),
+        ('Umm Al Quwain, UAE', 'Umm Al Quwain, UAE'),
+    ]
     COMPLETION_CHOICES = [('ready', 'Ready'), ('off_plan', 'Off Plan'), ('under_construction', 'Under Construction')]
 
     # Core
@@ -43,10 +81,13 @@ class Property(models.Model):
     dld_permit_number = models.CharField(max_length=50, blank=True, help_text='Dubai Land Department permit/listing number')
 
     # Classification
-    property_type = models.CharField(max_length=30, choices=TYPE_CHOICES)
+    # A property can be tagged as more than one type (e.g. "villa" + "duplex"),
+    # so this is a JSON list of TYPE_CHOICES values rather than a single one.
+    property_type = models.JSONField(default=list, blank=True)
     purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     completion_status = models.CharField(max_length=30, choices=COMPLETION_CHOICES, default='ready')
+    handover_date = models.DateField(null=True, blank=True, help_text='Expected/actual handover date (mainly for off-plan properties)')
 
     # Pricing
     price = models.DecimalField(max_digits=15, decimal_places=2)
@@ -56,11 +97,17 @@ class Property(models.Model):
 
     # Location
     address = models.CharField(max_length=500)
-    city = models.CharField(max_length=100, default='Dubai')
+    # A property can be tagged as near more than one area — same JSON-list
+    # approach as property_type, validated against NEARBY_AREA_CHOICES.
+    nearby_area = models.JSONField(default=list, blank=True)
+    city = models.CharField(max_length=100, choices=CITY_CHOICES, default='Dubai')
     country = models.CharField(max_length=100, default='UAE')
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
-    google_maps_url = models.URLField(blank=True)
+    # URLField defaults to max_length=200 — real Google Maps share links
+    # (with encoded place IDs, coordinates, zoom, data params) routinely
+    # exceed that and get silently rejected on save.
+    google_maps_url = models.URLField(blank=True, max_length=1000)
 
     # Relations
     community = models.ForeignKey('communities.Community', on_delete=models.SET_NULL, null=True, blank=True, related_name='properties')
@@ -118,7 +165,6 @@ class Property(models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['status', 'purpose']),
-            models.Index(fields=['property_type']),
             models.Index(fields=['is_featured']),
             models.Index(fields=['slug']),
             models.Index(fields=['price']),
@@ -129,6 +175,12 @@ class Property(models.Model):
 
     def save(self, *args, **kwargs):
         if self.google_maps_url:
+            # Mobile "Share" links are goo.gl short links with no coordinates
+            # in the URL itself — resolve to the real maps.google.com URL
+            # first (and keep that resolved form: once resolved it no longer
+            # matches a short-link host, so this is a local no-op on later
+            # saves — the map/iframe embed and re-extraction both benefit).
+            self.google_maps_url = resolve_maps_url(self.google_maps_url)
             coords = extract_coordinates_from_maps_url(self.google_maps_url)
             if coords:
                 self.latitude, self.longitude = coords

@@ -23,11 +23,11 @@ from apps.seo.models import SEOPage, Redirect
 User = get_user_model()
 
 STAFF_USERS = [
-    ('marketing@wolvesintl.com', 'marketing', 'Layla', 'Marketing'),
-    ('sales@wolvesintl.com', 'sales', 'Omar', 'Sales'),
-    ('agent@wolvesintl.com', 'agent', 'Noura', 'Agent'),
-    ('editor@wolvesintl.com', 'editor', 'James', 'Editor'),
-    ('viewer@wolvesintl.com', 'viewer', 'Elena', 'Viewer'),
+    ('marketing@wolvesint.com', 'marketing', 'Layla', 'Marketing'),
+    ('sales@wolvesint.com', 'sales', 'Omar', 'Sales'),
+    ('agent@wolvesint.com', 'agent', 'Noura', 'Agent'),
+    ('editor@wolvesint.com', 'editor', 'James', 'Editor'),
+    ('viewer@wolvesint.com', 'viewer', 'Elena', 'Viewer'),
 ]
 
 SEO_PAGES = [
@@ -221,12 +221,12 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Demo data seeded successfully.'))
 
     def create_superuser(self):
-        if not User.objects.filter(email='admin@wolvesintl.com').exists():
+        if not User.objects.filter(email='admin@wolvesint.com').exists():
             User.objects.create_superuser(
-                username='admin', email='admin@wolvesintl.com', password='Admin@12345',
+                username='admin', email='admin@wolvesint.com', password='Admin@12345',
                 first_name='Wolves', last_name='Admin', role='super_admin',
             )
-            self.stdout.write(self.style.SUCCESS('Created superuser: admin@wolvesintl.com / Admin@12345'))
+            self.stdout.write(self.style.SUCCESS('Created superuser: admin@wolvesint.com / Admin@12345'))
         else:
             self.stdout.write('Superuser already exists, skipping.')
 
@@ -321,7 +321,7 @@ class Command(BaseCommand):
         for i in range(8):
             rng = random.Random(f'agent-{i}')
             first, last = FIRST_NAMES[i], LAST_NAMES[i]
-            email = f'{first.lower()}.{last.lower().replace(" ", "")}@wolvesintl.com'
+            email = f'{first.lower()}.{last.lower().replace(" ", "")}@wolvesint.com'
             obj, created = Agent.objects.get_or_create(
                 email=email,
                 defaults=dict(
@@ -372,7 +372,7 @@ class Command(BaseCommand):
                 title=title,
                 defaults=dict(
                     description=f'{title} located in the heart of {community.name}, offering premium finishes and stunning views.',
-                    property_type=ptype,
+                    property_type=[ptype],
                     purpose=purpose,
                     status='published',
                     completion_status=rng.choice(['ready', 'off_plan', 'under_construction']),
@@ -528,7 +528,7 @@ class Command(BaseCommand):
         settings.company_name = 'Wolves International'
         settings.tagline = 'Your Trusted Partner in Dubai Real Estate'
         settings.description = 'Wolves International is a premier real estate agency in Dubai, offering an unrivaled selection of properties for sale, rent, and investment.'
-        settings.email = 'info@wolvesintl.com'
+        settings.email = 'info@wolvesint.com'
         settings.phone = '+97142345678'
         settings.whatsapp = '971501234567'
         settings.address = 'Office 1201, Business Bay, Dubai, UAE'

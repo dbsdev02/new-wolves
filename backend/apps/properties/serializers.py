@@ -44,8 +44,8 @@ class PropertyListSerializer(serializers.ModelSerializer):
         model = Property
         fields = [
             'id', 'title', 'slug', 'reference_number', 'property_type', 'purpose',
-            'status', 'completion_status', 'price', 'currency', 'price_per_sqft',
-            'address', 'city', 'community_name', 'developer_name', 'agent_name',
+            'status', 'completion_status', 'handover_date', 'price', 'currency', 'price_per_sqft',
+            'address', 'nearby_area', 'city', 'community_name', 'developer_name', 'agent_name',
             'agent_phone', 'min_bedrooms', 'max_bedrooms', 'bathrooms', 'area_sqft', 'parking_spaces',
             'featured_image', 'primary_image', 'is_featured', 'is_hot', 'is_luxury',
             'is_new_launch', 'views_count', 'created_at',
@@ -89,6 +89,20 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
 
 
 class PropertyWriteSerializer(serializers.ModelSerializer):
+    # Declared explicitly (rather than left to ModelSerializer's default
+    # JSONField mapping) so multipart form data — which can only send
+    # strings, not native JSON — is read the same way amenity_ids already
+    # is: as repeated `property_type` form keys, one per selected type.
+    property_type = serializers.ListField(
+        child=serializers.ChoiceField(choices=[c[0] for c in Property.TYPE_CHOICES]),
+        allow_empty=False,
+    )
+    # Same reasoning as property_type above — nearby_area is a JSON list now,
+    # sent as repeated form keys from multipart requests.
+    nearby_area = serializers.ListField(
+        child=serializers.ChoiceField(choices=[c[0] for c in Property.NEARBY_AREA_CHOICES]),
+        required=False,
+    )
     amenity_ids = serializers.ListField(child=serializers.IntegerField(), write_only=True, required=False)
     # HTML multipart forms can't distinguish "amenity_ids omitted" from "amenity_ids
     # sent as an empty list" (DRF's ListField.get_value falls back to `empty` either

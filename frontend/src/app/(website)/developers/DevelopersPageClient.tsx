@@ -32,7 +32,7 @@ export function DevelopersPageClient() {
               >
                 {developer.logo ? (
                   <div className="relative h-20 mb-6">
-                    <Image src={getMediaUrl(developer.logo)} alt={developer.name} fill className="object-contain object-left grayscale group-hover:grayscale-0 transition-all duration-300" sizes="200px" />
+                    <Image src={getMediaUrl(developer.logo)} alt={developer.name} fill className="object-contain object-left transition-all duration-300" sizes="200px" />
                   </div>
                 ) : (
                   <div className="h-20 flex items-center mb-6">
@@ -42,8 +42,7 @@ export function DevelopersPageClient() {
                 {developer.short_description && (
                   <p className="text-muted-foreground text-sm line-clamp-2 mb-6">{developer.short_description}</p>
                 )}
-                <div className="flex items-center justify-between text-xs tracking-[0.15em] uppercase pt-4 border-t border-border">
-                  <span className="text-muted-foreground">{developer.total_projects} Projects</span>
+                <div className="flex items-center justify-end text-xs tracking-[0.15em] uppercase pt-4 border-t border-border">
                   <span className="text-gold-deep">View →</span>
                 </div>
               </Link>

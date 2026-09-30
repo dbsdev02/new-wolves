@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { HeroSection } from '@/components/home/HeroSection';
+import { AwardsSection } from '@/components/home/AwardsSection';
 import { FeaturedProperties } from '@/components/home/FeaturedProperties';
+import { LeadershipSection } from '@/components/home/LeadershipSection';
 import { DevelopersSection } from '@/components/home/DevelopersSection';
 import { FeaturedProjects } from '@/components/home/FeaturedProjects';
 import { MarketReportSection } from '@/components/home/MarketReportSection';
@@ -28,6 +30,12 @@ export default function HomePage() {
       {/* 2. Featured Properties — white */}
       <FeaturedProperties />
 
+      {/* 2b. Awards & Recognition — ink (dark) */}
+      <AwardsSection />
+
+      {/* 2c. Leadership — cream */}
+      <LeadershipSection />
+
       {/* 3. Developer marquee — white with border */}
       <DevelopersSection />
 
@@ -40,8 +48,8 @@ export default function HomePage() {
       {/* 6. Communities — cream */}
       <CommunitiesSection />
 
-      {/* 7. Quiz CTA — white */}
-      <QuizSection />
+      {/* 7. Quiz CTA — white — removed for now */}
+      {/* <QuizSection /> */}
 
       {/* 8. Mortgage Calculator — cream */}
       <MortgageCalculator />
@@ -52,8 +60,8 @@ export default function HomePage() {
       {/* 10. Blog — cream */}
       <BlogsSection />
 
-      {/* 11. Sustainability — white */}
-      <SustainabilitySection />
+      {/* 11. Sustainability — white — removed for now */}
+      {/* <SustainabilitySection /> */}
 
       {/* 12. FAQ — white */}
       <FAQSection />

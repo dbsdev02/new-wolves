@@ -26,7 +26,15 @@ export function AdminTestimonialsClient() {
       toast.success(editItem ? 'Updated!' : 'Created!');
       setShowForm(false); setEditItem(null); reset();
     },
-    onError: () => toast.error('Failed to save.'),
+    onError: (err: any) => {
+      const detail = err?.response?.data;
+      const msg = typeof detail === 'string'
+        ? detail
+        : detail && typeof detail === 'object'
+          ? Object.entries(detail).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' · ')
+          : 'Failed to save.';
+      toast.error(msg);
+    },
   });
 
   const deleteMutation = useMutation({
@@ -35,6 +43,19 @@ export function AdminTestimonialsClient() {
   });
 
   const openEdit = (item: any) => { setEditItem(item); reset(item); setShowForm(true); };
+
+  // Only send the fields the API serializer accepts. Passing the whole row back
+  // (id, created_at, and especially `photo` as a URL string) makes DRF's
+  // ImageField reject the request with a 400.
+  const buildPayload = (d: any) => ({
+    name: d.name,
+    designation: d.designation || '',
+    company: d.company || '',
+    content: d.content,
+    rating: Number(d.rating) || 5,
+    order: Number(d.order) || 0,
+    is_featured: !!d.is_featured,
+  });
 
   const fieldClass = 'input-luxury text-sm';
   const labelClass = 'label-luxury';
@@ -82,7 +103,7 @@ export function AdminTestimonialsClient() {
               <h3 className="font-display font-bold text-xl">{editItem ? 'Edit Testimonial' : 'Add Testimonial'}</h3>
               <button onClick={() => setShowForm(false)}><HiX className="w-5 h-5" /></button>
             </div>
-            <form onSubmit={handleSubmit((d) => saveMutation.mutate(d))} className="space-y-4">
+            <form onSubmit={handleSubmit((d) => saveMutation.mutate(buildPayload(d)))} className="space-y-4">
               <div><label className={labelClass}>Name *</label><input {...register('name', { required: true })} className={fieldClass} /></div>
               <div className="grid grid-cols-2 gap-4">
                 <div><label className={labelClass}>Designation</label><input {...register('designation')} className={fieldClass} /></div>

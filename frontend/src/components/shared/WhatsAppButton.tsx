@@ -1,9 +1,11 @@
 'use client';
 import { FaWhatsapp } from 'react-icons/fa';
 import { buildWhatsAppUrl } from '@/lib/utils';
+import { useSiteSettings } from '@/hooks/useContent';
 
 export function WhatsAppButton() {
-  const phone = process.env.NEXT_PUBLIC_WHATSAPP || '971501234567';
+  const { data: settings } = useSiteSettings();
+  const phone = settings?.whatsapp || process.env.NEXT_PUBLIC_WHATSAPP || '971501234567';
   const message = 'Hello! I am interested in your properties. Can you help me?';
 
   return (

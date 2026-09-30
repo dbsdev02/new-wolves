@@ -97,8 +97,26 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
+            # How long a connection waits for a lock before raising
+            # "database is locked", in seconds. SQLite's default (5s) is too
+            # short once the admin and the public site are both writing.
+            'OPTIONS': {'timeout': 20},
         }
     }
+
+    # WAL mode lets reads proceed while a write is in progress instead of
+    # blocking behind it — the single biggest lever for SQLite under mixed
+    # admin/public traffic. Must be set per-connection (SQLite has no
+    # server-side config), so it's applied on every new connection.
+    def _set_sqlite_pragmas(sender, connection, **kwargs):
+        if connection.vendor == 'sqlite':
+            with connection.cursor() as cursor:
+                cursor.execute('PRAGMA journal_mode=WAL;')
+                cursor.execute('PRAGMA synchronous=NORMAL;')
+                cursor.execute('PRAGMA busy_timeout=20000;')
+
+    from django.db.backends.signals import connection_created
+    connection_created.connect(_set_sqlite_pragmas)
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -124,9 +142,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Cloudinary (read early — REST_FRAMEWORK below needs it)
-USE_CLOUDINARY = env.bool('USE_CLOUDINARY', default=False)
-
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -151,13 +166,11 @@ REST_FRAMEWORK = {
         'anon': '2000/hour',
         'user': '5000/hour',
     },
-    # When Cloudinary is off, serialize image/file fields as their relative
-    # storage path (e.g. "developers/logos/1.png") instead of an absolute URL
-    # pointing at this server — the frontend resolves that path against its
-    # own bundled /public/media copy. Once Cloudinary is on, storage.url is
-    # already an absolute https:// URL, so DRF's build_absolute_uri leaves it
-    # unchanged and this has no effect.
-    'UPLOADED_FILES_USE_URL': USE_CLOUDINARY,
+    # Serialize image/file fields as their relative storage path (e.g.
+    # "developers/logos/1.png") instead of an absolute URL pointing at this
+    # server — the frontend resolves that path against its configured media
+    # base (NEXT_PUBLIC_MEDIA_BASE).
+    'UPLOADED_FILES_USE_URL': False,
 }
 
 # JWT
@@ -189,8 +202,21 @@ EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@wolvesintl.com')
-ADMIN_EMAIL = env('ADMIN_EMAIL', default='admin@wolvesintl.com')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@wolvesint.com')
+ADMIN_EMAIL = env('ADMIN_EMAIL', default='admin@wolvesint.com')
+
+# Zapier lead forwarding — every lead created via the public /leads/ endpoint
+# (contact, property inquiry, list-your-property, careers, etc.) is also
+# POSTed here, best-effort, alongside the normal DB save.
+ZAPIER_LEADS_URL = env('ZAPIER_LEADS_URL', default='https://wolvesx.com/api/zapier-leads-secure')
+ZAPIER_LEADS_TOKEN = env('ZAPIER_LEADS_TOKEN', default='7f9c2a8e1b4d6x9q3w5z')
+
+# Google Reviews (Client Stories section) — both blank by default, in which
+# case apps/testimonials/google_reviews.py returns an empty/unconfigured
+# response and the frontend section just doesn't render. See that file's
+# docstring for how to obtain each value.
+GOOGLE_PLACES_API_KEY = env('GOOGLE_PLACES_API_KEY', default='')
+GOOGLE_PLACE_ID = env('GOOGLE_PLACE_ID', default='')
 
 # Redis / Celery
 REDIS_URL = env('REDIS_URL', default='redis://localhost:6379/0')
@@ -205,18 +231,6 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
-
-# Cloudinary
-if USE_CLOUDINARY:
-    import cloudinary
-    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME'),
-        'API_KEY': env('CLOUDINARY_API_KEY'),
-        'API_SECRET': env('CLOUDINARY_API_SECRET'),
-    }
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = f'https://res.cloudinary.com/{env("CLOUDINARY_CLOUD_NAME")}/'
 
 # AWS S3 (future)
 USE_S3 = env.bool('USE_S3', default=False)
@@ -241,3 +255,9 @@ SPECTACULAR_SETTINGS = {
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Django's default (2.5MB) counts the whole multipart body, files included —
+# easily exceeded by a multi-photo gallery upload even after client-side
+# compression. Raised to a realistic ceiling for batch photo uploads.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024

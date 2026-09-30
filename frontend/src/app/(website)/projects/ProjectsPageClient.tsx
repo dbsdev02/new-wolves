@@ -4,19 +4,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useProjects } from '@/hooks/useContent';
 import { formatPrice, getMediaUrl } from '@/lib/utils';
+import { PROJECT_CITIES } from '@/lib/propertyChoices';
 import { HiSearch } from 'react-icons/hi';
 
-const statusOptions = [
-  { label: 'All', value: '' },
-  { label: 'Upcoming', value: 'upcoming' },
-  { label: 'Under Construction', value: 'under_construction' },
-  { label: 'Ready', value: 'ready' },
-];
+const cityOptions = [{ label: 'All', value: '' }, ...PROJECT_CITIES.map((c) => ({ label: c, value: c }))];
 
 export function ProjectsPageClient() {
-  const [status, setStatus] = useState('');
+  const [city, setCity] = useState('');
   const [search, setSearch] = useState('');
-  const { data, isLoading } = useProjects({ status: status || undefined, search: search || undefined });
+  const { data, isLoading } = useProjects({ city: city || undefined, search: search || undefined });
 
   return (
     <div className="bg-background">
@@ -42,11 +38,11 @@ export function ProjectsPageClient() {
             />
           </div>
           <div className="flex gap-2 flex-wrap">
-            {statusOptions.map((opt) => (
+            {cityOptions.map((opt) => (
               <button
                 key={opt.value}
-                onClick={() => setStatus(opt.value)}
-                className={`px-4 py-2.5 text-xs tracking-[0.15em] uppercase transition-colors border ${status === opt.value ? 'bg-ink text-white border-ink' : 'border-border hover:border-ink'}`}
+                onClick={() => setCity(opt.value)}
+                className={`px-4 py-2.5 text-xs tracking-[0.15em] uppercase transition-colors border ${city === opt.value ? 'bg-ink text-white border-ink' : 'border-border hover:border-ink'}`}
               >
                 {opt.label}
               </button>

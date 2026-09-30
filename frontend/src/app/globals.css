@@ -199,6 +199,46 @@
     color: var(--muted);
   }
 
+  /* ── Range slider (Mortgage Calculator) ──
+     appearance-none strips native OS styling entirely — without these
+     pseudo-elements there is no visible track at all, only accent-color on
+     the (now-removed) native thumb, which most browsers then ignore. This
+     draws an explicit black track behind a gold thumb. */
+  .range-luxury {
+    background: transparent;
+  }
+  .range-luxury::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 9999px;
+    background: var(--ink);
+  }
+  .range-luxury::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: -6px;
+    border-radius: 9999px;
+    background: var(--gold-deep);
+    border: 2px solid var(--white);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+  }
+  .range-luxury::-moz-range-track {
+    height: 4px;
+    border-radius: 9999px;
+    background: var(--ink);
+  }
+  .range-luxury::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    background: var(--gold-deep);
+    border: 2px solid var(--white);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+  }
+
   /* ── Badges ── */
   .badge-gold {
     @apply inline-flex items-center px-3 py-1 text-white text-[0.6rem] font-semibold uppercase tracking-widest;

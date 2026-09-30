@@ -5,7 +5,7 @@ from .models import Community
 class CommunityListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Community
-        fields = ['id', 'name', 'slug', 'image', 'short_description', 'city', 'total_properties', 'is_featured']
+        fields = ['id', 'name', 'slug', 'image', 'short_description', 'city', 'total_properties', 'is_featured', 'is_active']
 
 
 class CommunityDetailSerializer(serializers.ModelSerializer):

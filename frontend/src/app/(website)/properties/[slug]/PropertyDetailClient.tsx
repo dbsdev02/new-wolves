@@ -1,10 +1,10 @@
 'use client';
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useProperty, useSimilarProperties } from '@/hooks/useProperties';
-import { formatPrice, formatArea, formatBedroomRange, getMediaUrl, buildWhatsAppUrl } from '@/lib/utils';
+import { formatPrice, formatArea, formatBedroomRange, formatDate, getMediaUrl, buildWhatsAppUrl, isEmbeddableMapsUrl, buildMapsEmbedUrl, buildAddressEmbedUrl } from '@/lib/utils';
+import { propertyTypeLabel, nearbyAreaLabel, purposeLabel } from '@/lib/propertyChoices';
 import { PropertyCard } from '@/components/properties/PropertyCard';
 import { InquiryForm } from '@/components/properties/InquiryForm';
 import { PropertyMortgageWidget } from '@/components/properties/PropertyMortgageWidget';
@@ -17,14 +17,8 @@ import { MdBathtub, MdSquareFoot, MdVerified } from 'react-icons/md';
 import { FaWhatsapp, FaBed } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
-const SinglePropertyMap = dynamic(
-  () => import('@/components/properties/SinglePropertyMap').then((m) => m.SinglePropertyMap),
-  { ssr: false, loading: () => <div className="h-[420px] bg-muted animate-pulse" /> }
-);
-
 interface Props { slug: string; }
 
-const PURPOSE_LABEL: Record<string, string> = { sale: 'For Sale', rent: 'For Rent', off_plan: 'Off Plan' };
 const COMPLETION_LABEL: Record<string, string> = { ready: 'Ready', off_plan: 'Off-Plan', under_construction: 'Under Construction' };
 
 const LOCATION_TABS = [
@@ -41,6 +35,15 @@ export function PropertyDetailClient({ slug }: Props) {
   const [activeImage, setActiveImage] = useState(0);
   const [descExpanded, setDescExpanded] = useState(false);
   const [locationTab, setLocationTab] = useState<typeof LOCATION_TABS[number]['key']>('map');
+
+  // Next.js reuses this component instance across client-side navigations
+  // between two [slug] routes — without this, activeImage/lightboxOpen
+  // carry over from the previous property and can point past the end of
+  // the new property's (possibly shorter) image list.
+  useEffect(() => {
+    setActiveImage(0);
+    setLightboxOpen(false);
+  }, [slug]);
 
   if (isLoading) return (
     <div className="min-h-screen pt-20 bg-background">
@@ -90,9 +93,10 @@ export function PropertyDetailClient({ slug }: Props) {
   const prevImage = () => setActiveImage((i) => (i - 1 + allImages.length) % allImages.length);
 
   const keyInfo = [
-    { label: 'Property Type', value: property.property_type?.replace('_', ' ') },
-    { label: 'Purpose', value: PURPOSE_LABEL[property.purpose] || property.purpose },
+    { label: 'Property Type', value: (property.property_type || []).map(propertyTypeLabel).join(', ') },
+    { label: 'Property Status', value: purposeLabel(property.purpose) },
     { label: 'Completion', value: COMPLETION_LABEL[property.completion_status] || property.completion_status },
+    ...(property.handover_date ? [{ label: 'Handover Date', value: formatDate(property.handover_date) }] : []),
     { label: 'Furnishing Type', value: property.furnishing ? property.furnishing.replace('_', ' ') : 'Not specified' },
     { label: 'Property ID', value: property.reference_number },
   ];
@@ -180,9 +184,9 @@ export function PropertyDetailClient({ slug }: Props) {
         </div>
 
         <div className="mt-4 flex items-center gap-2 flex-wrap text-xs tracking-wider uppercase text-muted-foreground">
-          <span>{property.property_type}</span>
+          <span>{(property.property_type || []).map(propertyTypeLabel).join(' / ')}</span>
           <span>|</span>
-          <span>{PURPOSE_LABEL[property.purpose] || property.purpose}</span>
+          <span>{purposeLabel(property.purpose)}</span>
           <span>|</span>
           <span>{COMPLETION_LABEL[property.completion_status] || property.completion_status}</span>
         </div>
@@ -192,6 +196,11 @@ export function PropertyDetailClient({ slug }: Props) {
           <HiLocationMarker className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--gold-deep)' }} />
           {property.address}
         </p>
+        {property.nearby_area?.length > 0 && (
+          <p className="mt-1 text-sm text-muted-foreground pl-[22px]">
+            {property.nearby_area.map(nearbyAreaLabel).join(', ')}
+          </p>
+        )}
 
         <div className="mt-5 flex items-center gap-6 text-sm text-ink">
           <span className="flex items-center gap-2">
@@ -314,7 +323,7 @@ export function PropertyDetailClient({ slug }: Props) {
             </div>
 
             {/* Location */}
-            {((property.latitude && property.longitude) || property.google_maps_url) && (
+            {((property.latitude && property.longitude) || property.google_maps_url || property.address) && (
               <div id="property-location">
                 <h2 className="serif text-2xl text-ink mb-6">Location</h2>
                 <div className="flex gap-6 border-b border-border mb-6">
@@ -333,10 +342,22 @@ export function PropertyDetailClient({ slug }: Props) {
 
                 {locationTab === 'map' ? (
                   property.latitude && property.longitude ? (
-                    <SinglePropertyMap latitude={Number(property.latitude)} longitude={Number(property.longitude)} />
-                  ) : property.google_maps_url ? (
                     <iframe
-                      src={`${property.google_maps_url}${property.google_maps_url.includes('?') ? '&' : '?'}output=embed`}
+                      src={`https://www.google.com/maps?q=${property.latitude},${property.longitude}&output=embed`}
+                      className="w-full h-[420px] border border-border"
+                      loading="lazy"
+                      title="Property location"
+                    />
+                  ) : isEmbeddableMapsUrl(property.google_maps_url) ? (
+                    <iframe
+                      src={buildMapsEmbedUrl(property.google_maps_url)}
+                      className="w-full h-[420px] border border-border"
+                      loading="lazy"
+                      title="Property location"
+                    />
+                  ) : property.address || property.community_name || property.city ? (
+                    <iframe
+                      src={buildAddressEmbedUrl([property.address, property.community_name, property.city].filter(Boolean).join(', '))}
                       className="w-full h-[420px] border border-border"
                       loading="lazy"
                       title="Property location"
@@ -455,7 +476,7 @@ export function PropertyDetailClient({ slug }: Props) {
       )}
 
       {/* Lightbox */}
-      {lightboxOpen && allImages.length > 0 && (
+      {lightboxOpen && allImages[activeImage] && (
         <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center">
           <button onClick={() => setLightboxOpen(false)} className="absolute top-6 right-6 text-white/80 hover:text-white z-10">
             <HiX className="h-8 w-8" />

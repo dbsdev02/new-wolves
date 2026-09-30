@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { developerService } from '@/services/contentService';
-import { getMediaUrl } from '@/lib/utils';
+import { getMediaUrl, normalizeIfUrlField } from '@/lib/utils';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { HiPlus, HiPencil, HiTrash, HiX } from 'react-icons/hi';
 import toast from 'react-hot-toast';
@@ -30,7 +30,10 @@ export function AdminDevelopersClient() {
       toast.success(editItem ? 'Developer updated!' : 'Developer created!');
       setShowForm(false); setEditItem(null); setLogo(null); setCoverImage(null); reset();
     },
-    onError: () => toast.error('Failed to save.'),
+    onError: (err: any) => {
+      const msg = err?.response?.data;
+      toast.error(msg ? JSON.stringify(msg) : 'Failed to save.');
+    },
   });
 
   const deleteMutation = useMutation({
@@ -40,13 +43,39 @@ export function AdminDevelopersClient() {
 
   const onSubmit = (data: any) => {
     const fd = new FormData();
-    Object.entries(data).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== '') fd.append(k, String(v)); });
+    if (data.name) fd.append('name', data.name);
+    if (data.short_description) fd.append('short_description', data.short_description);
+    if (data.description) fd.append('description', data.description);
+    if (data.headquarters) fd.append('headquarters', data.headquarters);
+    if (data.website) fd.append('website', normalizeIfUrlField('website', data.website));
+    if (data.meta_title) fd.append('meta_title', data.meta_title);
+    if (data.meta_description) fd.append('meta_description', data.meta_description);
+    if (!isNaN(data.founded_year) && data.founded_year) fd.append('founded_year', String(data.founded_year));
+    if (!isNaN(data.total_projects)) fd.append('total_projects', String(data.total_projects || 0));
+    if (!isNaN(data.total_units)) fd.append('total_units', String(data.total_units || 0));
+    if (!isNaN(data.order)) fd.append('order', String(data.order || 0));
+    fd.append('is_featured', data.is_featured ? 'true' : 'false');
+    fd.append('is_active', data.is_active ? 'true' : 'false');
     if (logo) fd.append('logo', logo);
     if (coverImage) fd.append('cover_image', coverImage);
     saveMutation.mutate(fd);
   };
 
-  const openEdit = (item: any) => { setEditItem(item); setLogo(null); setCoverImage(null); reset(item); setShowForm(true); };
+  const openEdit = async (item: any) => {
+    setLogo(null);
+    setCoverImage(null);
+    // The list only returns a summary (missing is_active, etc.) — fetch the
+    // full record so the form doesn't silently reset fields it never saw.
+    try {
+      const { data: full } = await developerService.getBySlug(item.slug);
+      setEditItem(full);
+      reset(full);
+    } catch {
+      setEditItem(item);
+      reset(item);
+    }
+    setShowForm(true);
+  };
 
   const fieldClass = 'input-luxury text-sm';
   const labelClass = 'label-luxury';
@@ -58,7 +87,7 @@ export function AdminDevelopersClient() {
           <h1 className="font-display text-2xl font-bold text-luxury-black">Developers</h1>
           <p className="text-gray-500 text-sm mt-1">{data?.results?.length || 0} developers</p>
         </div>
-        <button onClick={() => { setEditItem(null); setLogo(null); setCoverImage(null); reset({}); setShowForm(true); }} className="btn-gold gap-2">
+        <button onClick={() => { setEditItem(null); setLogo(null); setCoverImage(null); reset({ is_active: true, order: 0 }); setShowForm(true); }} className="btn-gold gap-2">
           <HiPlus className="w-5 h-5" /> Add Developer
         </button>
       </div>
@@ -67,16 +96,17 @@ export function AdminDevelopersClient() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-100 bg-luxury-light">
-              {['Developer', 'Projects', 'Units', 'Featured', 'Actions'].map(h => (
+              {['Order', 'Developer', 'Projects', 'Units', 'Featured', 'Actions'].map(h => (
                 <th key={h} className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {isLoading
-              ? Array.from({ length: 6 }).map((_, i) => <tr key={i}>{Array.from({ length: 5 }).map((_, j) => <td key={j} className="px-6 py-4"><div className="h-4 bg-gray-100 animate-pulse rounded" /></td>)}</tr>)
+              ? Array.from({ length: 6 }).map((_, i) => <tr key={i}>{Array.from({ length: 6 }).map((_, j) => <td key={j} className="px-6 py-4"><div className="h-4 bg-gray-100 animate-pulse rounded" /></td>)}</tr>)
               : (data?.results || []).map((dev: any) => (
                   <tr key={dev.id} className="hover:bg-luxury-light transition-colors">
+                    <td className="px-6 py-4 text-sm text-gray-500">{dev.order ?? 0}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {dev.logo && (
@@ -115,7 +145,13 @@ export function AdminDevelopersClient() {
               <button onClick={() => setShowForm(false)}><HiX className="w-5 h-5" /></button>
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div><label className={labelClass}>Name *</label><input {...register('name', { required: true })} className={fieldClass} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className={labelClass}>Name *</label><input {...register('name', { required: true })} className={fieldClass} /></div>
+                <div>
+                  <label className={labelClass}>Order</label>
+                  <input {...register('order', { valueAsNumber: true })} type="number" min={0} className={fieldClass} placeholder="0 = shown first" />
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <ImageUploadField label="Logo" file={logo} onChange={setLogo} existingUrl={editItem?.logo} />
                 <ImageUploadField label="Cover Image" file={coverImage} onChange={setCoverImage} existingUrl={editItem?.cover_image} />

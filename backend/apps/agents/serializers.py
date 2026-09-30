@@ -14,7 +14,7 @@ class AgentListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'first_name', 'last_name', 'designation', 'photo',
             'phone', 'whatsapp', 'email', 'languages', 'experience_years',
-            'total_properties', 'total_deals', 'is_featured', 'rera_number',
+            'total_properties', 'total_deals', 'is_featured', 'is_active', 'rera_number',
         ]
 
 

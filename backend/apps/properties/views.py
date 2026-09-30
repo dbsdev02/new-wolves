@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import Property, PropertyImage, FloorPlan, PaymentPlan, Amenity
@@ -12,6 +13,7 @@ from .serializers import (
 )
 from .filters import PropertyFilter
 from apps.users.permissions import IsEditorOrAbove
+from config.cache import public_cache_page
 
 
 class PropertyViewSet(viewsets.ModelViewSet):
@@ -51,22 +53,50 @@ class PropertyViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['post'], permission_classes=[IsEditorOrAbove])
+    def bulk_action(self, request):
+        """Bulk status change or delete for the admin list's multi-select.
+        One query per call (an .update() or a .delete()) rather than the
+        frontend firing N individual requests — the host has been observed
+        intermittently 503'ing under concurrent load, so keeping this to a
+        single DB round trip matters more here than it would normally."""
+        ids = request.data.get('ids') or []
+        action_type = request.data.get('action')
+        valid_statuses = dict(Property.STATUS_CHOICES)
+        if not isinstance(ids, list) or not ids:
+            return Response({'detail': 'No properties selected.'}, status=status.HTTP_400_BAD_REQUEST)
+        if action_type not in [*valid_statuses.keys(), 'delete']:
+            return Response({'detail': 'Invalid action.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        qs = Property.objects.filter(id__in=ids)
+        if action_type == 'delete':
+            count = qs.count()
+            qs.delete()
+            return Response({'detail': f'{count} propert{"y" if count == 1 else "ies"} deleted.', 'count': count})
+
+        count = qs.update(status=action_type)
+        return Response({'detail': f'{count} propert{"y" if count == 1 else "ies"} updated.', 'count': count})
+
     @action(detail=False, methods=['get'])
+    @method_decorator(public_cache_page(60))
     def featured(self, request):
         qs = self.get_queryset().filter(is_featured=True, status='published')[:8]
         return Response(PropertyListSerializer(qs, many=True, context={'request': request}).data)
 
     @action(detail=False, methods=['get'])
+    @method_decorator(public_cache_page(60))
     def hot(self, request):
         qs = self.get_queryset().filter(is_hot=True, status='published')[:8]
         return Response(PropertyListSerializer(qs, many=True, context={'request': request}).data)
 
     @action(detail=False, methods=['get'])
+    @method_decorator(public_cache_page(60))
     def luxury(self, request):
         qs = self.get_queryset().filter(is_luxury=True, status='published')[:8]
         return Response(PropertyListSerializer(qs, many=True, context={'request': request}).data)
 
     @action(detail=True, methods=['get'])
+    @method_decorator(public_cache_page(60))
     def similar(self, request, slug=None):
         prop = self.get_object()
         similar = Property.objects.filter(

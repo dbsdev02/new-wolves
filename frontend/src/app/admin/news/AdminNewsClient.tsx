@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { newsItemService, tickerStatService } from '@/services/contentService';
+import { normalizeUrlFields } from '@/lib/utils';
 import { HiPlus, HiPencil, HiTrash, HiX } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
@@ -121,7 +122,7 @@ function HeadlinesPanel() {
               <h3 className="font-display font-bold text-xl">{editItem ? 'Edit Headline' : 'Add Headline'}</h3>
               <button onClick={() => setShowForm(false)}><HiX className="w-5 h-5" /></button>
             </div>
-            <form onSubmit={handleSubmit((d) => saveMutation.mutate(d))} className="space-y-4">
+            <form onSubmit={handleSubmit((d) => saveMutation.mutate(normalizeUrlFields(d)))} className="space-y-4">
               <div><label className={labelClass}>Headline *</label><input {...register('headline', { required: true })} className={fieldClass} placeholder="e.g. Dubai property market stays resilient in H1 2026" /></div>
               <div><label className={labelClass}>Link (optional)</label><input {...register('link')} className={fieldClass} placeholder="https://... (makes the headline clickable)" /></div>
               <div><label className={labelClass}>Order</label><input {...register('order', { valueAsNumber: true })} type="number" min={0} className={fieldClass} /></div>

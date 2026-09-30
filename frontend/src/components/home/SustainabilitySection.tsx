@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { HiOutlineSparkles } from 'react-icons/hi2';
 
 export function SustainabilitySection() {
@@ -41,9 +42,9 @@ export function SustainabilitySection() {
             ))}
           </div>
 
-          <a href="/about" className="mt-8 inline-flex btn-gold">
+          <Link href="/about" className="mt-8 inline-flex btn-gold">
             <HiOutlineSparkles className="h-4 w-4" strokeWidth={1.5} /> Learn more
-          </a>
+          </Link>
         </div>
 
         {/* Image */}

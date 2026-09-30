@@ -9,22 +9,36 @@ interface RedirectRule {
   redirect_type: '301' | '302';
 }
 
+// Module-scoped, so it survives across requests on the same warm
+// server/isolate instead of relying solely on Next's fetch data cache
+// (which middleware doesn't always honor consistently). This turns the
+// "hit the backend on every single navigation" cost into "hit it at most
+// once every 5 minutes" — the redirect list only changes when an admin
+// edits it in the CMS, so a few minutes of staleness is fine.
+let cachedRedirects: RedirectRule[] = [];
+let cachedAt = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
 async function fetchActiveRedirects(): Promise<RedirectRule[]> {
+  if (Date.now() - cachedAt < CACHE_TTL_MS) return cachedRedirects;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
+    const timeout = setTimeout(() => controller.abort(), 1500);
     const res = await fetch(`${API_URL}/seo/redirects/active/`, {
       next: { revalidate: 300 },
       signal: controller.signal,
     });
     clearTimeout(timeout);
-    if (!res.ok) return [];
     const contentType = res.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) return [];
-    return res.json();
+    if (res.ok && contentType.includes('application/json')) {
+      cachedRedirects = await res.json();
+      cachedAt = Date.now();
+    }
   } catch {
-    return [];
+    // Backend unreachable/slow — keep serving the last known list (or
+    // empty, on first load) instead of blocking navigation on a retry.
   }
+  return cachedRedirects;
 }
 
 export async function middleware(request: NextRequest) {

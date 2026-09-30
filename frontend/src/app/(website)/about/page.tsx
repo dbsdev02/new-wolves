@@ -26,19 +26,19 @@ const founders = [
   },
   {
     img: '/images/team/aanshul.png',
-    name: 'Aanshul Agarwal',
+    name: 'Anshul Agarwal',
     role: 'Co-Founder & Managing Partner',
     bio: [
-      'Aanshul Agarwal is the Managing Partner and Co-Founder of Wolves International, a leading force in the real estate industry with over 16 years of sales experience. Having led teams of 500+ in India and 150+ internationally for a UK-based company, he achieved over 1 billion in real estate sales in a remarkably short period.',
-      'A self-proclaimed Black Wolf, Aanshul is committed to innovation, collaboration, and breaking boundaries — striving to redefine the industry and chart new paths for success.',
+      'Anshul Agarwal is the Managing Partner and Co-Founder of Wolves International, a leading force in the real estate industry with over 16 years of sales experience. Having led teams of 500+ in India and 150+ internationally for a UK-based company, he achieved over 1 billion in real estate sales in a remarkably short period.',
+      'A self-proclaimed Black Wolf, Anshul is committed to innovation, collaboration, and breaking boundaries — striving to redefine the industry and chart new paths for success.',
     ],
   },
 ];
 
 const stats = [
-  { icon: HiOutlineBuildingOffice2, n: '1B+', l: 'AED in sales' },
+  { icon: HiOutlineBuildingOffice2, n: '3B+', l: 'AED in sales' },
   { icon: HiOutlineUsers, n: '500+', l: 'Team members led' },
-  { icon: HiOutlineGlobeAlt, n: '3', l: 'Countries: UAE & India' },
+  { icon: HiOutlineGlobeAlt, n: '4', l: 'Countries: UAE, India, UK & Europe' },
   { icon: HiOutlineTrophy, n: '38+', l: 'Combined years experience' },
 ];
 

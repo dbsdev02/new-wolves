@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -8,6 +10,13 @@ User = get_user_model()
 
 
 class LeadCreationTests(APITestCase):
+    def setUp(self):
+        # Lead creation forwards to an external Zapier webhook (apps.leads.tasks.send_lead_to_zapier) —
+        # never let tests make that real network call.
+        patcher = patch('apps.leads.tasks.requests.post')
+        self.addCleanup(patcher.stop)
+        patcher.start()
+
     def test_anonymous_user_can_submit_a_lead(self):
         response = self.client.post('/api/v1/leads/', {
             'name': 'Jane Buyer', 'email': 'jane@example.com', 'phone': '+971501234567',

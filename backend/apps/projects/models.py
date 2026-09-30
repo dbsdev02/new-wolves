@@ -7,6 +7,10 @@ class Project(models.Model):
         ('upcoming', 'Upcoming'), ('under_construction', 'Under Construction'),
         ('ready', 'Ready'), ('sold_out', 'Sold Out'),
     ]
+    CITY_CHOICES = [
+        ('Dubai', 'Dubai'), ('Abu Dhabi', 'Abu Dhabi'), ('Sharjah', 'Sharjah'),
+        ('Ras Al Khaimah', 'Ras Al Khaimah'), ('Ajman', 'Ajman'),
+    ]
 
     name = models.CharField(max_length=200)
     slug = models.SlugField(max_length=250, unique=True, blank=True)
@@ -33,6 +37,7 @@ class Project(models.Model):
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     address = models.CharField(max_length=500, blank=True)
+    city = models.CharField(max_length=100, choices=CITY_CHOICES, default='Dubai')
 
     is_featured = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

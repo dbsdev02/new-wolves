@@ -14,14 +14,16 @@ export interface Property {
   reference_number: string;
   dld_permit_number: string;
   description: string;
-  property_type: string;
-  purpose: 'sale' | 'rent' | 'off_plan';
+  property_type: string[];
+  purpose: 'sale' | 'rent' | 'off_plan' | 'resale' | 'rental';
   status: 'draft' | 'published' | 'archived' | 'sold' | 'rented';
   completion_status: 'ready' | 'off_plan' | 'under_construction';
+  handover_date: string | null;
   price: number;
   currency: string;
   price_per_sqft: number | null;
   address: string;
+  nearby_area: string[];
   city: string;
   community_name: string | null;
   community_slug: string | null;
@@ -168,6 +170,7 @@ export interface Developer {
   total_units: number;
   is_featured: boolean;
   is_active: boolean;
+  order: number;
   meta_title: string;
   meta_description: string;
 }
@@ -206,6 +209,7 @@ export interface Project {
   description: string;
   short_description: string;
   status: string;
+  city: string;
   completion_date: string | null;
   launch_date: string | null;
   min_price: number | null;
@@ -248,6 +252,15 @@ export interface Blog {
   comments?: BlogComment[];
 }
 
+export interface BlogCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  image: string | null;
+  blog_count: number;
+}
+
 export interface BlogComment {
   id: number;
   name: string;
@@ -264,6 +277,25 @@ export interface Testimonial {
   content: string;
   rating: number;
   is_featured: boolean;
+}
+
+export interface GoogleReview {
+  author_name: string;
+  author_url: string | null;
+  profile_photo_url: string | null;
+  rating: number;
+  text: string;
+  relative_time_description: string;
+  time: number;
+}
+
+export interface GoogleReviews {
+  configured: boolean;
+  name?: string;
+  rating: number | null;
+  user_ratings_total: number;
+  url: string | null;
+  reviews: GoogleReview[];
 }
 
 export interface FAQ {
@@ -299,6 +331,7 @@ export interface SiteSettings {
   description: string;
   email: string;
   phone: string;
+  toll_free_number: string;
   whatsapp: string;
   address: string;
   city: string;
@@ -354,6 +387,7 @@ export interface PropertyFilters {
   purpose?: string;
   property_type?: string;
   community?: string;
+  city?: string;
   developer?: string;
   min_price?: number;
   max_price?: number;

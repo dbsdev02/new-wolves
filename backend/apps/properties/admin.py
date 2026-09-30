@@ -25,7 +25,9 @@ class NearbyPlaceInline(admin.TabularInline):
 @admin.register(Property)
 class PropertyAdmin(admin.ModelAdmin):
     list_display = ['title', 'reference_number', 'property_type', 'purpose', 'status', 'price', 'currency', 'is_featured', 'created_at']
-    list_filter = ['status', 'purpose', 'property_type', 'is_featured', 'is_hot', 'is_luxury', 'completion_status']
+    # property_type is now a JSON list (a property can have more than one
+    # type), so Django admin's exact-match list_filter no longer applies to it.
+    list_filter = ['status', 'purpose', 'is_featured', 'is_hot', 'is_luxury', 'completion_status']
     search_fields = ['title', 'reference_number', 'address']
     prepopulated_fields = {'slug': ('title',)}
     inlines = [PropertyImageInline, FloorPlanInline, PaymentPlanInline, NearbyPlaceInline]

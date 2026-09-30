@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { settingsService } from '@/services';
+import { normalizeUrlFields } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 export function AdminSettingsClient() {
@@ -20,7 +21,13 @@ export function AdminSettingsClient() {
   const mutation = useMutation({
     mutationFn: (data: any) => settingsService.update(data),
     onSuccess: () => toast.success('Settings saved!'),
-    onError: () => toast.error('Failed to save settings.'),
+    onError: (err: any) => {
+      const msg = err?.response?.data;
+      const fallback = err?.response
+        ? `Failed to save settings (HTTP ${err.response.status}).`
+        : 'Failed to save settings — no response from the server.';
+      toast.error(msg ? JSON.stringify(msg) : fallback, { duration: 15000 });
+    },
   });
 
   if (isLoading) return <div className="animate-pulse space-y-4">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-12 bg-gray-100" />)}</div>;
@@ -35,7 +42,18 @@ export function AdminSettingsClient() {
         <p className="text-gray-500 text-sm mt-1">Manage your website configuration</p>
       </div>
 
-      <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
+      <form
+        onSubmit={handleSubmit((data) => {
+          // reset(settings) seeds these three ImageField values (existing file
+          // paths, as strings) into the form even though nothing here lets you
+          // change them — sent back as JSON, Django sees a string where it
+          // expects an uploaded file and 400s with "not a file". This form has
+          // no upload control for them, so just don't submit them.
+          const { logo, logo_dark, favicon, ...rest } = data;
+          mutation.mutate(normalizeUrlFields(rest));
+        })}
+        className="space-y-6"
+      >
         {/* Company */}
         <div className="bg-white border border-gray-100 p-6 space-y-5">
           <h2 className="font-display font-bold text-lg border-b border-gray-100 pb-3">Company Information</h2>
@@ -57,6 +75,7 @@ export function AdminSettingsClient() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div><label className={labelClass}>Email</label><input {...register('email')} type="email" className={fieldClass} /></div>
             <div><label className={labelClass}>Phone</label><input {...register('phone')} className={fieldClass} /></div>
+            <div><label className={labelClass}>Toll Free Number</label><input {...register('toll_free_number')} className={fieldClass} /></div>
             <div><label className={labelClass}>WhatsApp</label><input {...register('whatsapp')} className={fieldClass} /></div>
             <div><label className={labelClass}>City</label><input {...register('city')} className={fieldClass} /></div>
           </div>

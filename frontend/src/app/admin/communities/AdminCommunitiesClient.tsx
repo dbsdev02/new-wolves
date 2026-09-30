@@ -4,13 +4,16 @@ import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { communityService } from '@/services/contentService';
-import { getMediaUrl } from '@/lib/utils';
+import { getMediaUrl, appendFormData } from '@/lib/utils';
+import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { HiPlus, HiPencil, HiTrash, HiX } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
 export function AdminCommunitiesClient() {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
+  const [image, setImage] = useState<File | null>(null);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -37,11 +40,39 @@ export function AdminCommunitiesClient() {
 
   const onSubmit = (data: any) => {
     const fd = new FormData();
-    Object.entries(data).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== '') fd.append(k, String(v)); });
+    if (data.name) fd.append('name', data.name);
+    if (data.city) fd.append('city', data.city);
+    if (data.short_description) fd.append('short_description', data.short_description);
+    if (data.description) fd.append('description', data.description);
+    if (data.nearby_schools) fd.append('nearby_schools', data.nearby_schools);
+    if (data.nearby_hospitals) fd.append('nearby_hospitals', data.nearby_hospitals);
+    if (data.nearby_metro) fd.append('nearby_metro', data.nearby_metro);
+    if (data.nearby_malls) fd.append('nearby_malls', data.nearby_malls);
+    if (data.meta_title) fd.append('meta_title', data.meta_title);
+    if (data.meta_description) fd.append('meta_description', data.meta_description);
+    if (!isNaN(data.latitude) && data.latitude) fd.append('latitude', String(data.latitude));
+    if (!isNaN(data.longitude) && data.longitude) fd.append('longitude', String(data.longitude));
+    if (!isNaN(data.total_properties)) fd.append('total_properties', String(data.total_properties || 0));
+    fd.append('is_featured', data.is_featured ? 'true' : 'false');
+    fd.append('is_active', data.is_active ? 'true' : 'false');
+    if (image) fd.append('image', image);
+    if (coverImage) fd.append('cover_image', coverImage);
     saveMutation.mutate(fd);
   };
 
-  const openEdit = (item: any) => { setEditItem(item); reset(item); setShowForm(true); };
+  const openEdit = async (item: any) => {
+    setImage(null);
+    setCoverImage(null);
+    try {
+      const { data: full } = await communityService.getBySlug(item.slug);
+      setEditItem(full);
+      reset(full);
+    } catch {
+      setEditItem(item);
+      reset(item);
+    }
+    setShowForm(true);
+  };
 
   const fieldClass = 'input-luxury text-sm';
   const labelClass = 'label-luxury';
@@ -53,7 +84,7 @@ export function AdminCommunitiesClient() {
           <h1 className="font-display text-2xl font-bold text-luxury-black">Communities</h1>
           <p className="text-gray-500 text-sm mt-1">{data?.results?.length || 0} communities</p>
         </div>
-        <button onClick={() => { setEditItem(null); reset({}); setShowForm(true); }} className="btn-gold gap-2">
+        <button onClick={() => { setEditItem(null); setImage(null); setCoverImage(null); reset({ is_active: true, city: 'Dubai' }); setShowForm(true); }} className="btn-gold gap-2">
           <HiPlus className="w-5 h-5" /> Add Community
         </button>
       </div>
@@ -97,7 +128,11 @@ export function AdminCommunitiesClient() {
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div><label className={labelClass}>Name *</label><input {...register('name', { required: true })} className={fieldClass} /></div>
-              <div><label className={labelClass}>City</label><input {...register('city')} className={fieldClass} defaultValue="Dubai" /></div>
+              <div><label className={labelClass}>City</label><input {...register('city')} className={fieldClass} /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <ImageUploadField label="Image" file={image} onChange={setImage} existingUrl={editItem?.image} />
+                <ImageUploadField label="Cover Image" file={coverImage} onChange={setCoverImage} existingUrl={editItem?.cover_image} />
+              </div>
               <div><label className={labelClass}>Short Description</label><textarea {...register('short_description')} rows={2} className={`${fieldClass} resize-none`} /></div>
               <div><label className={labelClass}>Description</label><textarea {...register('description')} rows={4} className={`${fieldClass} resize-none`} /></div>
               <div className="grid grid-cols-2 gap-4">

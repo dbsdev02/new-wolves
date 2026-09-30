@@ -45,8 +45,14 @@ export const useBlog = (slug: string) =>
 export const useFeaturedBlogs = () =>
   useQuery({ queryKey: ['blogs', 'featured'], queryFn: () => blogService.getFeatured().then(r => r.data), staleTime: 10 * 60 * 1000 });
 
+export const useBlogCategories = () =>
+  useQuery({ queryKey: ['blog-categories'], queryFn: () => blogService.getCategories().then(r => r.data), staleTime: 30 * 60 * 1000 });
+
 export const useTestimonials = () =>
   useQuery({ queryKey: ['testimonials'], queryFn: () => testimonialService.getAll().then(r => r.data), staleTime: 30 * 60 * 1000 });
+
+export const useGoogleReviews = () =>
+  useQuery({ queryKey: ['google-reviews'], queryFn: () => testimonialService.getGoogleReviews().then(r => r.data), staleTime: 60 * 60 * 1000 });
 
 export const useFAQs = (params?: Record<string, unknown>) =>
   useQuery({ queryKey: ['faqs', params], queryFn: () => faqService.getAll(params).then(r => r.data), staleTime: 30 * 60 * 1000 });

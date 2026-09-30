@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { agentService } from '@/services/contentService';
-import { getMediaUrl } from '@/lib/utils';
+import { getMediaUrl, appendFormData } from '@/lib/utils';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import { HiPlus, HiPencil, HiTrash, HiX } from 'react-icons/hi';
 import toast from 'react-hot-toast';
@@ -36,7 +36,10 @@ export function AdminAgentsClient() {
       setPhoto(null);
       reset();
     },
-    onError: () => toast.error('Failed to save agent.'),
+    onError: (err: any) => {
+      const msg = err?.response?.data;
+      toast.error(msg ? JSON.stringify(msg) : 'Failed to save agent.', { duration: 15000 });
+    },
   });
 
   const deleteMutation = useMutation({
@@ -46,15 +49,23 @@ export function AdminAgentsClient() {
 
   const onSubmit = (data: any) => {
     const fd = new FormData();
-    Object.entries(data).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== '') fd.append(k, String(v)); });
+    appendFormData(fd, data, ['photo']);
     if (photo) fd.append('photo', photo);
     saveMutation.mutate(fd);
   };
 
-  const openEdit = (agent: any) => {
-    setEditAgent(agent);
+  const openEdit = async (agent: any) => {
     setPhoto(null);
-    reset(agent);
+    // The list only returns a summary (missing is_active, bio, socials, etc.) —
+    // fetch the full record so the form doesn't silently reset fields it never saw.
+    try {
+      const { data: full } = await agentService.getById(agent.id);
+      setEditAgent(full);
+      reset(full);
+    } catch {
+      setEditAgent(agent);
+      reset(agent);
+    }
     setShowForm(true);
   };
 
@@ -68,7 +79,7 @@ export function AdminAgentsClient() {
           <h1 className="font-display text-2xl font-bold text-luxury-black">Agents</h1>
           <p className="text-gray-500 text-sm mt-1">{data?.results?.length || 0} agents</p>
         </div>
-        <button onClick={() => { setEditAgent(null); setPhoto(null); reset({}); setShowForm(true); }} className="btn-gold gap-2">
+        <button onClick={() => { setEditAgent(null); setPhoto(null); reset({ is_active: true }); setShowForm(true); }} className="btn-gold gap-2">
           <HiPlus className="w-5 h-5" /> Add Agent
         </button>
       </div>

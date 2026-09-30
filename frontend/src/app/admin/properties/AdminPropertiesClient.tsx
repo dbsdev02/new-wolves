@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { propertyService } from '@/services/propertyService';
 import { formatPrice, getMediaUrl } from '@/lib/utils';
+import { propertyTypeLabel } from '@/lib/propertyChoices';
 import { HiPlus, HiPencil, HiTrash, HiEye, HiSearch } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
@@ -12,6 +13,7 @@ export function AdminPropertiesClient() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -28,10 +30,50 @@ export function AdminPropertiesClient() {
     onError: () => toast.error('Failed to delete property.'),
   });
 
+  const bulkMutation = useMutation({
+    mutationFn: ({ ids, action }: { ids: number[]; action: string }) => propertyService.bulkAction(ids, action),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['admin-properties'] });
+      toast.success(res.data.detail);
+      setSelected(new Set());
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.detail;
+      toast.error(msg || 'Bulk action failed.');
+    },
+  });
+
   const handleDelete = (slug: string, title: string) => {
     if (confirm(`Delete "${title}"? This cannot be undone.`)) {
       deleteMutation.mutate(slug);
     }
+  };
+
+  const pageIds = data?.results.map((p) => p.id) || [];
+  const allOnPageSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+
+  const toggleAllOnPage = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allOnPageSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  const toggleOne = (id: number) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const runBulk = (action: string) => {
+    const count = selected.size;
+    if (action === 'delete' && !confirm(`Delete ${count} selected propert${count === 1 ? 'y' : 'ies'}? This cannot be undone.`)) return;
+    bulkMutation.mutate({ ids: Array.from(selected), action });
   };
 
   const statusColors: Record<string, string> = {
@@ -80,12 +122,58 @@ export function AdminPropertiesClient() {
         </select>
       </div>
 
+      {/* Bulk action toolbar */}
+      {selected.size > 0 && (
+        <div className="bg-luxury-black text-white px-6 py-3 flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium">{selected.size} selected</span>
+          <div className="flex flex-wrap items-center gap-2 ml-auto">
+            <button
+              disabled={bulkMutation.isPending}
+              onClick={() => runBulk('published')}
+              className="px-3 py-1.5 text-xs font-medium bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50"
+            >
+              Mark Published
+            </button>
+            <button
+              disabled={bulkMutation.isPending}
+              onClick={() => runBulk('draft')}
+              className="px-3 py-1.5 text-xs font-medium bg-yellow-600 hover:bg-yellow-700 transition-colors disabled:opacity-50"
+            >
+              Mark Draft
+            </button>
+            <button
+              disabled={bulkMutation.isPending}
+              onClick={() => runBulk('archived')}
+              className="px-3 py-1.5 text-xs font-medium bg-gray-600 hover:bg-gray-700 transition-colors disabled:opacity-50"
+            >
+              Archive
+            </button>
+            <button
+              disabled={bulkMutation.isPending}
+              onClick={() => runBulk('delete')}
+              className="px-3 py-1.5 text-xs font-medium bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              Delete
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="px-3 py-1.5 text-xs font-medium border border-white/30 hover:border-white transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-white border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100 bg-luxury-light">
+                <th className="px-6 py-4 w-10">
+                  <input type="checkbox" className="accent-gold w-4 h-4" checked={allOnPageSelected} onChange={toggleAllOnPage} aria-label="Select all on page" />
+                </th>
                 <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Property</th>
                 <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
                 <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
@@ -98,13 +186,16 @@ export function AdminPropertiesClient() {
               {isLoading
                 ? Array.from({ length: 8 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: 6 }).map((_, j) => (
+                      {Array.from({ length: 7 }).map((_, j) => (
                         <td key={j} className="px-6 py-4"><div className="h-4 bg-gray-100 animate-pulse rounded" /></td>
                       ))}
                     </tr>
                   ))
                 : data?.results.map((property) => (
-                    <tr key={property.id} className="hover:bg-luxury-light transition-colors">
+                    <tr key={property.id} className={`hover:bg-luxury-light transition-colors ${selected.has(property.id) ? 'bg-gold/5' : ''}`}>
+                      <td className="px-6 py-4">
+                        <input type="checkbox" className="accent-gold w-4 h-4" checked={selected.has(property.id)} onChange={() => toggleOne(property.id)} aria-label={`Select ${property.title}`} />
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="relative w-12 h-10 flex-shrink-0 overflow-hidden bg-gray-100">
@@ -124,7 +215,7 @@ export function AdminPropertiesClient() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 capitalize">{property.property_type}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600">{(property.property_type || []).map(propertyTypeLabel).join(', ')}</td>
                       <td className="px-6 py-4 text-sm font-semibold text-gold">{formatPrice(property.price, property.currency)}</td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[property.status] || 'bg-gray-100 text-gray-600'}`}>

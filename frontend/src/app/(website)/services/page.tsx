@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { HiArrowRight, HiCheckCircle } from 'react-icons/hi';
 
@@ -14,7 +15,8 @@ const services = [
     subtitle: 'Find Your Dream Home',
     description: 'Our expert agents guide you through every step of the property buying process in Dubai.',
     features: ['Personalized property search', 'Market analysis & valuation', 'Negotiation support', 'Legal & documentation assistance', 'Post-purchase support'],
-    cta: { label: 'Start Your Search', href: '/properties?purpose=sale' },
+    cta: { label: 'Explore Our Properties', href: '/properties?purpose=sale' },
+    image: '/services/buying.jpg',
   },
   {
     id: 'selling',
@@ -23,6 +25,7 @@ const services = [
     description: 'Get the best value for your property with our proven marketing strategies and expert negotiation.',
     features: ['Free property valuation', 'Professional photography', 'Multi-channel marketing', 'Qualified buyer network', 'Seamless transaction management'],
     cta: { label: 'List Your Property', href: '/list-your-property' },
+    image: '/services/selling.jpg',
   },
   {
     id: 'renting',
@@ -31,6 +34,7 @@ const services = [
     description: 'Find the perfect rental property or maximize your rental income with our comprehensive services.',
     features: ['Extensive rental listings', 'Tenant screening', 'Lease management', 'Maintenance coordination', 'Rental market insights'],
     cta: { label: 'Browse Rentals', href: '/properties?purpose=rent' },
+    image: '/services/renting.jpg',
   },
   {
     id: 'management',
@@ -39,6 +43,7 @@ const services = [
     description: 'Let us manage your investment property while you enjoy the returns.',
     features: ['Tenant management', 'Rent collection', 'Maintenance & repairs', 'Financial reporting', 'Legal compliance'],
     cta: { label: 'Learn More', href: '/contact?type=management' },
+    image: '/services/management.jpg',
   },
   {
     id: 'golden-visa',
@@ -47,6 +52,7 @@ const services = [
     description: 'Secure your UAE Golden Visa through strategic real estate investment with our expert guidance.',
     features: ['Eligibility assessment', 'Property selection for visa', 'Application assistance', 'Legal documentation', 'Post-visa support'],
     cta: { label: 'Get Consultation', href: '/contact?type=golden_visa' },
+    image: '/services/golden-visa.jpg',
   },
   {
     id: 'mortgage',
@@ -55,6 +61,7 @@ const services = [
     description: 'Navigate the mortgage landscape with our expert advisors and secure the best financing for your property.',
     features: ['Mortgage eligibility check', 'Bank comparison', 'Application support', 'Pre-approval assistance', 'Refinancing options'],
     cta: { label: 'Calculate Mortgage', href: '/#mortgage' },
+    image: '/services/mortgage.jpg',
   },
 ];
 
@@ -62,14 +69,14 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen pt-20 bg-luxury-light">
       <div className="bg-luxury-black py-16">
-        <div className="container-luxury text-center">
+        <div className="container-luxe text-center">
           <span className="section-subtitle">What We Offer</span>
           <h1 className="font-display text-4xl md:text-5xl font-bold text-white mt-2">Our Services</h1>
           <p className="text-gray-400 mt-4 max-w-xl mx-auto">Comprehensive real estate solutions tailored to your needs</p>
         </div>
       </div>
 
-      <div className="container-luxury py-16">
+      <div className="container-luxe py-16">
         <div className="space-y-8">
           {services.map((service, i) => (
             <div key={service.id} id={service.id} className={`grid grid-cols-1 lg:grid-cols-2 gap-10 items-center ${i % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
@@ -91,11 +98,19 @@ export default function ServicesPage() {
                   <HiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
-              <div className={`${i % 2 === 1 ? 'lg:order-1' : ''} bg-luxury-black p-12 flex items-center justify-center min-h-[300px]`}>
-                <div className="text-center">
-                  <div className="font-display text-6xl font-bold text-gold/20 mb-4">{String(i + 1).padStart(2, '0')}</div>
+              <div className={`${i % 2 === 1 ? 'lg:order-1' : ''} relative overflow-hidden min-h-[300px]`}>
+                <Image
+                  src={service.image}
+                  alt={service.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-8">
+                  <div className="font-display text-5xl font-bold text-gold/40 mb-2">{String(i + 1).padStart(2, '0')}</div>
                   <h3 className="font-display text-2xl font-bold text-white">{service.title}</h3>
-                  <p className="text-gray-400 mt-2 text-sm">{service.subtitle}</p>
+                  <p className="text-gray-300 mt-1 text-sm">{service.subtitle}</p>
                 </div>
               </div>
             </div>

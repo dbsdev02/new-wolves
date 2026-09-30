@@ -60,7 +60,7 @@ export default function ForgotPasswordPage() {
                     <input
                       {...register('email')}
                       type="email"
-                      placeholder="admin@wolvesintl.com"
+                      placeholder="admin@wolvesint.com"
                       className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none focus:border-gold transition-colors"
                     />
                   </div>

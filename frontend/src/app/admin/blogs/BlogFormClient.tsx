@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { blogService } from '@/services/contentService';
+import { appendFormData } from '@/lib/utils';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -51,9 +52,7 @@ export function BlogFormClient({ slug }: Props) {
   const mutation = useMutation({
     mutationFn: (data: any) => {
       const fd = new FormData();
-      Object.entries(data).forEach(([k, v]) => {
-        if (v !== null && v !== undefined && v !== '') fd.append(k, String(v));
-      });
+      appendFormData(fd, data, ['featured_image']);
       if (featuredImage) fd.append('featured_image', featuredImage);
       return isEdit ? blogService.update(existing.slug, fd) : blogService.create(fd);
     },
@@ -94,7 +93,7 @@ export function BlogFormClient({ slug }: Props) {
           </div>
           <div>
             <label className={labelClass}>Content *</label>
-            <textarea {...register('content', { required: true })} rows={15} className={`${fieldClass} resize-none font-mono text-xs`} placeholder="Article content (HTML supported)" />
+            <textarea {...register('content', { required: true })} rows={15} className={`${fieldClass} resize-none font-mono text-xs`} placeholder="Article content — plain text is fine (leave a blank line between paragraphs). HTML tags are also supported if you need headings, lists, etc." />
             {errors.content && <p className="text-red-500 text-xs mt-1">Content is required</p>}
           </div>
           <ImageUploadField

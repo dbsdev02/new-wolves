@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { HiOutlineDocumentText, HiOutlineArrowUpRight } from 'react-icons/hi2';
+import { HiOutlineArrowUpRight } from 'react-icons/hi2';
+import { MarketReportDownload } from './MarketReportDownload';
 
 export function MarketReportSection() {
   return (
@@ -68,10 +69,8 @@ export function MarketReportSection() {
             ))}
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-4">
-            <a href="#" className="btn-gold">
-              <HiOutlineDocumentText className="h-4 w-4" strokeWidth={1.5} /> Download report
-            </a>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <MarketReportDownload />
             <Link
               href="/about"
               className="link-underline flex items-center gap-2 text-[0.65rem] tracking-[0.22em] uppercase font-semibold"

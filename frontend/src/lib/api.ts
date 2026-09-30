@@ -9,8 +9,19 @@ const api = axios.create({
   timeout: 30000,
 });
 
+// Only attach the admin's token on /admin pages. Without this, every public
+// page (properties, communities, ...) silently sent a logged-in admin's
+// Bearer token too, since this same `api` instance is shared everywhere —
+// and the backend's get_queryset() correctly shows an authenticated
+// editor-or-above *everything* (drafts included), not just published. That
+// made an admin's own logged-in browser tab show draft properties on the
+// public site, which read as a bug even though real (logged-out) visitors
+// never saw them. Scoping it to /admin means the public site now looks
+// identical for everyone, including the admin — use an incognito window (or
+// just /admin/properties/<slug>) to preview an unpublished listing instead.
 api.interceptors.request.use((config) => {
-  const token = Cookies.get('access_token');
+  const isAdminPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+  const token = isAdminPage ? Cookies.get('access_token') : undefined;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });

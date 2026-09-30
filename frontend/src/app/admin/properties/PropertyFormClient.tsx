@@ -8,18 +8,33 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { propertyService } from '@/services/propertyService';
 import { useCommunities, useDevelopers, useAgents, useAmenities } from '@/hooks/useContent';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
-import { getMediaUrl } from '@/lib/utils';
+import { SearchableCheckboxGrid } from '@/components/admin/SearchableCheckboxGrid';
+import { getMediaUrl, appendFormData } from '@/lib/utils';
+import { compressImages } from '@/lib/imageCompression';
+import { PROPERTY_TYPES, NEARBY_AREAS, PURPOSES, CITIES } from '@/lib/propertyChoices';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { HiArrowLeft, HiX } from 'react-icons/hi';
 
+// register(field, { valueAsNumber: true }) turns a <select>'s blank/unselected
+// option ("") into NaN, not null/undefined — and z.number() rejects NaN even
+// through .optional().nullable(), since neither of those treats NaN as the
+// "absent" case they're meant for. That made these three fields fail
+// validation (and block the whole form submit) whenever left unselected,
+// even though the intent was clearly to allow that.
+const optionalId = z.preprocess(
+  (v) => (v === '' || (typeof v === 'number' && Number.isNaN(v)) ? null : v),
+  z.number().nullable().optional()
+);
+
 const schema = z.object({
   title: z.string().min(5),
   description: z.string().min(20),
-  property_type: z.string().min(1),
   purpose: z.string().min(1),
   status: z.string().min(1),
   completion_status: z.string().min(1),
+  handover_date: z.string().optional(),
+  furnishing: z.string().optional(),
   price: z.number().positive(),
   currency: z.string().default('AED'),
   area_sqft: z.number().positive(),
@@ -30,9 +45,9 @@ const schema = z.object({
   address: z.string().min(5),
   city: z.string().default('Dubai'),
   dld_permit_number: z.string().optional(),
-  community: z.number().optional().nullable(),
-  developer: z.number().optional().nullable(),
-  agent: z.number().optional().nullable(),
+  community: optionalId,
+  developer: optionalId,
+  agent: optionalId,
   is_featured: z.boolean().default(false),
   is_hot: z.boolean().default(false),
   is_luxury: z.boolean().default(false),
@@ -61,6 +76,8 @@ export function PropertyFormClient({ slug }: Props) {
   const { data: agents } = useAgents({ page_size: 200 });
   const { data: amenities } = useAmenities();
   const [selectedAmenities, setSelectedAmenities] = useState<number[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
 
   const { data: existingProperty } = useQuery({
@@ -85,6 +102,8 @@ export function PropertyFormClient({ slug }: Props) {
         area_sqft: Number(existingProperty.area_sqft),
       });
       setSelectedAmenities((existingProperty.amenities || []).map((a: any) => a.id));
+      setSelectedTypes(existingProperty.property_type || []);
+      setSelectedAreas(existingProperty.nearby_area || []);
     }
   }, [existingProperty, reset]);
 
@@ -92,12 +111,28 @@ export function PropertyFormClient({ slug }: Props) {
     setSelectedAmenities((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
   };
 
+  const toggleType = (t: string) => {
+    setSelectedTypes((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
+  };
+
+  const toggleArea = (a: string) => {
+    setSelectedAreas((prev) => prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]);
+  };
+
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       const formData = new FormData();
-      Object.entries(data).forEach(([k, v]) => {
-        if (v !== null && v !== undefined && v !== '') formData.append(k, String(v));
-      });
+      appendFormData(formData, data);
+      // appendFormData skips null/empty values entirely, which is right for
+      // most fields — but for these nullable relations it means clearing
+      // the dropdown back to "Select..." never reaches the backend on edit
+      // (a PATCH with the key simply absent leaves the old value in place).
+      // Sending an explicit empty string here lets DRF null the FK out.
+      formData.set('community', data.community != null ? String(data.community) : '');
+      formData.set('developer', data.developer != null ? String(data.developer) : '');
+      formData.set('agent', data.agent != null ? String(data.agent) : '');
+      selectedTypes.forEach((t) => formData.append('property_type', t));
+      selectedAreas.forEach((a) => formData.append('nearby_area', a));
       if (selectedAmenities.length > 0) {
         selectedAmenities.forEach((id) => formData.append('amenity_ids', String(id)));
       } else if (isEdit) {
@@ -114,20 +149,66 @@ export function PropertyFormClient({ slug }: Props) {
       toast.success(isEdit ? 'Property updated!' : 'Property created!');
       router.push('/admin/properties');
     },
-    onError: () => toast.error('Failed to save property.'),
+    onError: (err: any) => {
+      const msg = err?.response?.data;
+      toast.error(msg ? JSON.stringify(msg) : 'Failed to save property.', { duration: 15000 });
+    },
   });
 
-  const onSubmit = (data: FormData) => mutation.mutate(data);
+  const onSubmit = (data: FormData) => {
+    if (selectedTypes.length === 0) {
+      toast.error('Select at least one property type.');
+      return;
+    }
+    mutation.mutate(data);
+  };
+  const onInvalid = (formErrors: typeof errors) => {
+    const fields = Object.keys(formErrors).join(', ');
+    toast.error(fields ? `Please check these fields: ${fields}` : 'Please fill in all required fields (marked with *) before saving.', { duration: 15000 });
+  };
 
   const uploadGalleryMutation = useMutation({
-    mutationFn: (files: FileList) => {
-      const fd = new FormData();
-      Array.from(files).forEach((f) => fd.append('images', f));
-      return propertyService.uploadImages(existingProperty.slug, fd);
+    // One small request per photo rather than one big batched request — the
+    // live host's request body limit appears to sit somewhere under 1MB and
+    // silently drops the connection above it (no HTTP response at all) rather
+    // than returning a clean 413, so batching several compressed photos
+    // together can still exceed it. Uploading one at a time sidesteps that
+    // regardless of exactly where the ceiling is.
+    mutationFn: async (files: File[]) => {
+      const compressed = await compressImages(files);
+      const uploaded: any[] = [];
+      const failed: string[] = [];
+      for (const f of compressed) {
+        const fd = new FormData();
+        fd.append('images', f);
+        // The host has been seen intermittently 503'ing / dropping the
+        // connection under load (a resource-limit issue on their end, not
+        // something a request shape change can fix) — these are usually
+        // transient, so a couple of retries with a short backoff often
+        // succeeds where the first attempt didn't.
+        let lastErr: any;
+        let ok = false;
+        for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+          if (attempt > 0) await new Promise((r) => setTimeout(r, 1500 * attempt));
+          try {
+            const res = await propertyService.uploadImages(existingProperty.slug, fd);
+            uploaded.push(...(res.data || []));
+            ok = true;
+          } catch (err) {
+            lastErr = err;
+          }
+        }
+        if (!ok) {
+          failed.push(f.name);
+          console.error('Gallery upload failed after retries:', f.name, lastErr);
+        }
+      }
+      return { uploaded, failed };
     },
-    onSuccess: () => {
+    onSuccess: ({ uploaded, failed }: { uploaded: any[]; failed: string[] }) => {
       qc.invalidateQueries({ queryKey: ['property-edit', slug] });
-      toast.success('Photos added to gallery.');
+      if (uploaded.length) toast.success(`${uploaded.length} photo(s) added to gallery.`);
+      if (failed.length) toast.error(`Failed to upload: ${failed.join(', ')}`, { duration: 15000 });
     },
     onError: () => toast.error('Failed to upload gallery photos.'),
   });
@@ -185,7 +266,7 @@ export function PropertyFormClient({ slug }: Props) {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
         {/* Basic Info */}
         <div className="bg-white border border-gray-100 p-6 space-y-5">
           <h2 className="font-display font-bold text-lg border-b border-gray-100 pb-3">Basic Information</h2>
@@ -199,24 +280,24 @@ export function PropertyFormClient({ slug }: Props) {
             <textarea {...register('description')} rows={5} className={`${fieldClass} resize-none`} placeholder="Detailed property description..." />
             {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
           </div>
+          <div>
+            <label className={labelClass}>Property Type * <span className="text-gray-400 font-normal normal-case">(select one or more)</span></label>
+            <SearchableCheckboxGrid
+              options={PROPERTY_TYPES}
+              selected={selectedTypes}
+              onToggle={toggleType}
+              searchPlaceholder="Search property types..."
+              columns="grid-cols-2 md:grid-cols-4"
+            />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div>
-              <label className={labelClass}>Property Type *</label>
-              <select {...register('property_type')} className={`${fieldClass} appearance-none`}>
-                <option value="">Select Type</option>
-                {['apartment', 'villa', 'townhouse', 'penthouse', 'duplex', 'studio', 'office', 'retail', 'warehouse', 'land', 'building'].map(t => (
-                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-                ))}
-              </select>
-            </div>
             <div>
               <label className={labelClass}>Purpose *</label>
               <select {...register('purpose')} className={`${fieldClass} appearance-none`}>
                 <option value="">Select Purpose</option>
-                <option value="sale">For Sale</option>
-                <option value="rent">For Rent</option>
-                <option value="off_plan">Off Plan</option>
+                {PURPOSES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
+              {errors.purpose && <p className="text-red-500 text-xs mt-1">Purpose is required.</p>}
             </div>
             <div>
               <label className={labelClass}>Status *</label>
@@ -229,13 +310,28 @@ export function PropertyFormClient({ slug }: Props) {
               </select>
             </div>
           </div>
-          <div>
-            <label className={labelClass}>Completion Status</label>
-            <select {...register('completion_status')} className={`${fieldClass} appearance-none`}>
-              <option value="ready">Ready</option>
-              <option value="off_plan">Off Plan</option>
-              <option value="under_construction">Under Construction</option>
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label className={labelClass}>Completion Status</label>
+              <select {...register('completion_status')} className={`${fieldClass} appearance-none`}>
+                <option value="ready">Ready</option>
+                <option value="off_plan">Off Plan</option>
+                <option value="under_construction">Under Construction</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Handover Date</label>
+              <input {...register('handover_date')} type="date" className={fieldClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Furnishing</label>
+              <select {...register('furnishing')} className={`${fieldClass} appearance-none`}>
+                <option value="">Not specified</option>
+                <option value="furnished">Furnished</option>
+                <option value="semi_furnished">Semi Furnished</option>
+                <option value="unfurnished">Unfurnished</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -274,9 +370,19 @@ export function PropertyFormClient({ slug }: Props) {
                   type="file"
                   accept="image/*"
                   multiple
-                  onChange={(e) => { if (e.target.files?.length) uploadGalleryMutation.mutate(e.target.files); e.target.value = ''; }}
+                  disabled={uploadGalleryMutation.isPending}
+                  onChange={(e) => {
+                    // e.target.files is a *live* FileList tied to the input —
+                    // resetting e.target.value right after (to allow re-selecting
+                    // the same file) empties that same FileList before the
+                    // mutation actually runs. Snapshot it to a real array first.
+                    const files = e.target.files ? Array.from(e.target.files) : [];
+                    if (files.length) uploadGalleryMutation.mutate(files);
+                    e.target.value = '';
+                  }}
                   className={fieldClass}
                 />
+                {uploadGalleryMutation.isPending && <p className="text-xs text-gray-400 mt-1">Optimizing and uploading…</p>}
               </>
             ) : (
               <p className="text-xs text-gray-400">Save the property first, then come back here to add gallery photos.</p>
@@ -369,6 +475,7 @@ export function PropertyFormClient({ slug }: Props) {
             <div>
               <label className={labelClass}>Min Bedrooms *</label>
               <input {...register('min_bedrooms', { valueAsNumber: true })} type="number" min={0} className={fieldClass} />
+              {errors.min_bedrooms && <p className="text-red-500 text-xs mt-1">Required.</p>}
             </div>
             <div>
               <label className={labelClass}>Max Bedrooms *</label>
@@ -378,6 +485,7 @@ export function PropertyFormClient({ slug }: Props) {
             <div>
               <label className={labelClass}>Bathrooms *</label>
               <input {...register('bathrooms', { valueAsNumber: true })} type="number" min={0} className={fieldClass} />
+              {errors.bathrooms && <p className="text-red-500 text-xs mt-1">Required.</p>}
             </div>
             <div>
               <label className={labelClass}>Area (sqft) *</label>
@@ -397,6 +505,16 @@ export function PropertyFormClient({ slug }: Props) {
           <div>
             <label className={labelClass}>Address *</label>
             <input {...register('address')} className={fieldClass} placeholder="Full address" />
+            {errors.address && <p className="text-red-500 text-xs mt-1">Address is required (at least 5 characters).</p>}
+          </div>
+          <div>
+            <label className={labelClass}>Nearby Area <span className="text-gray-400 font-normal normal-case">(select one or more)</span></label>
+            <SearchableCheckboxGrid
+              options={NEARBY_AREAS}
+              selected={selectedAreas}
+              onToggle={toggleArea}
+              searchPlaceholder="Search nearby areas..."
+            />
           </div>
           <div>
             <label className={labelClass}>DLD Permit Number</label>
@@ -405,7 +523,9 @@ export function PropertyFormClient({ slug }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
               <label className={labelClass}>City</label>
-              <input {...register('city')} className={fieldClass} />
+              <select {...register('city')} className={`${fieldClass} appearance-none`}>
+                {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
             <div>
               <label className={labelClass}>Community</label>
@@ -436,19 +556,12 @@ export function PropertyFormClient({ slug }: Props) {
             <Link href="/admin/amenities" target="_blank" className="text-xs text-gold hover:underline">Manage amenities list →</Link>
           </div>
           {(amenities as any[])?.length ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {(amenities as any[]).map((a: any) => (
-                <label key={a.id} className="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    className="accent-gold w-4 h-4"
-                    checked={selectedAmenities.includes(a.id)}
-                    onChange={() => toggleAmenity(a.id)}
-                  />
-                  {a.name}
-                </label>
-              ))}
-            </div>
+            <SearchableCheckboxGrid
+              options={(amenities as any[]).map((a: any) => ({ value: a.id as number, label: a.name as string }))}
+              selected={selectedAmenities}
+              onToggle={toggleAmenity}
+              searchPlaceholder="Search amenities..."
+            />
           ) : (
             <p className="text-sm text-gray-400">No amenities yet — add some in the Amenities section first.</p>
           )}

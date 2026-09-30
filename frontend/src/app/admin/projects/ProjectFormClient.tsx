@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectService } from '@/services/contentService';
+import { appendFormData } from '@/lib/utils';
+import { PROJECT_CITIES } from '@/lib/propertyChoices';
 import { useCommunities, useDevelopers } from '@/hooks/useContent';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
 import toast from 'react-hot-toast';
@@ -17,6 +19,7 @@ interface ProjectFormValues {
   short_description: string;
   description: string;
   status: string;
+  city: string;
   developer: string;
   community: string;
   min_price: number | null;
@@ -50,7 +53,7 @@ export function ProjectFormClient({ slug }: Props) {
   });
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ProjectFormValues>({
-    defaultValues: { status: 'upcoming', currency: 'AED', total_units: 0, available_units: 0 },
+    defaultValues: { status: 'upcoming', city: 'Dubai', currency: 'AED', total_units: 0, available_units: 0 },
   });
 
   useEffect(() => {
@@ -60,7 +63,12 @@ export function ProjectFormClient({ slug }: Props) {
   const mutation = useMutation({
     mutationFn: async (data: any) => {
       const fd = new FormData();
-      Object.entries(data).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== '') fd.append(k, String(v)); });
+      appendFormData(fd, data, ['featured_image', 'cover_image']);
+      // appendFormData skips empty values, so clearing these back to
+      // "Select..." never reaches the backend on a PATCH (the key is just
+      // absent, leaving the old value in place) — send them explicitly.
+      fd.set('developer', data.developer || '');
+      fd.set('community', data.community || '');
       if (featuredImage) fd.append('featured_image', featuredImage);
       if (coverImage) fd.append('cover_image', coverImage);
       if (isEdit) return projectService.update(existing.slug, fd);
@@ -172,9 +180,17 @@ export function ProjectFormClient({ slug }: Props) {
             <ImageUploadField label="Featured Image" file={featuredImage} onChange={setFeaturedImage} existingUrl={existing?.featured_image} />
             <ImageUploadField label="Cover Image" file={coverImage} onChange={setCoverImage} existingUrl={existing?.cover_image} />
           </div>
-          <div>
-            <label className={labelClass}>Address</label>
-            <input {...register('address')} className={fieldClass} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className={labelClass}>Address</label>
+              <input {...register('address')} className={fieldClass} />
+            </div>
+            <div>
+              <label className={labelClass}>City</label>
+              <select {...register('city')} className={`${fieldClass} appearance-none`}>
+                {PROJECT_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-5">
             <div>

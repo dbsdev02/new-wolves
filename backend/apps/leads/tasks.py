@@ -1,5 +1,29 @@
+import requests
 from django.core.mail import send_mail
 from django.conf import settings
+
+
+def send_lead_to_zapier(lead_id):
+    from .models import Lead
+    if not settings.ZAPIER_LEADS_URL:
+        return
+    try:
+        lead = Lead.objects.select_related('property').get(id=lead_id)
+        payload = {
+            'name': lead.name,
+            'email': lead.email,
+            'phone': lead.phone,
+            'description': lead.message,
+            'campaign_name': lead.utm_campaign or lead.get_lead_type_display(),
+        }
+        requests.post(
+            settings.ZAPIER_LEADS_URL,
+            json=payload,
+            headers={'Authorization': f'Bearer {settings.ZAPIER_LEADS_TOKEN}'},
+            timeout=5,
+        )
+    except Exception:
+        pass
 
 
 def send_lead_notification(lead_id):

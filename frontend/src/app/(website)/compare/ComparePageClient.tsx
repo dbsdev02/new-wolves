@@ -2,10 +2,12 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { HiOutlineScale, HiX, HiSearch } from 'react-icons/hi';
+import { HiX, HiSearch } from 'react-icons/hi';
 import { usePropertyListStore, MAX_COMPARE_ITEMS } from '@/store/propertyListStore';
 import { useMultipleProperties, useProperties } from '@/hooks/useProperties';
 import { formatPrice, formatBedroomRange, getMediaUrl } from '@/lib/utils';
+import { propertyTypeLabel, purposeLabel } from '@/lib/propertyChoices';
+import { PropertyCompareIcon } from '@/components/icons/PropertyCompareIcon';
 import type { PropertyFilters } from '@/types';
 
 const purposeOptions = [
@@ -22,8 +24,8 @@ const formatPriceOption = (v: number) => v >= 1000000 ? `${v / 1000000}M` : `${v
 
 const ROWS: { label: string; render: (p: ReturnType<typeof useMultipleProperties>['properties'][number]) => React.ReactNode }[] = [
   { label: 'Price', render: (p) => formatPrice(p.price, p.currency) },
-  { label: 'Type', render: (p) => p.property_type },
-  { label: 'Purpose', render: (p) => p.purpose === 'sale' ? 'For Sale' : p.purpose === 'rent' ? 'For Rent' : 'Off Plan' },
+  { label: 'Type', render: (p) => (p.property_type || []).map(propertyTypeLabel).join(', ') },
+  { label: 'Property Status', render: (p) => purposeLabel(p.purpose) },
   { label: 'Bedrooms', render: (p) => formatBedroomRange(p.min_bedrooms, p.max_bedrooms) },
   { label: 'Bathrooms', render: (p) => p.bathrooms },
   { label: 'Area', render: (p) => `${Number(p.area_sqft).toLocaleString()} sqft` },
@@ -219,7 +221,7 @@ export function ComparePageClient() {
           <div className="text-center py-20 text-muted-foreground">Loading properties...</div>
         ) : properties.length === 0 ? (
           <div className="text-center py-20">
-            <HiOutlineScale className="w-16 h-16 text-muted-foreground mx-auto mb-6" strokeWidth={1} />
+            <PropertyCompareIcon className="w-16 h-16 text-muted-foreground mx-auto mb-6" strokeWidth={3} />
             <p className="text-muted-foreground mb-8">No properties selected for comparison yet. Add properties from the listing page.</p>
             <Link href="/properties" className="btn-gold">Browse Properties</Link>
           </div>

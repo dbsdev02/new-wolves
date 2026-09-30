@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { leadService } from '@/services';
 import { useSiteSettings } from '@/hooks/useContent';
+import { isEmbeddableMapsUrl, buildMapsEmbedUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import { HiPhone, HiMail, HiLocationMarker, HiClock, HiArrowRight } from 'react-icons/hi';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -43,8 +44,9 @@ export function ContactPageClient() {
   };
 
   const phone = settings?.phone || process.env.NEXT_PUBLIC_PHONE || '';
+  const tollFree = settings?.toll_free_number || '';
   const whatsapp = settings?.whatsapp || process.env.NEXT_PUBLIC_WHATSAPP || '';
-  const email = settings?.email || 'hello@wolvesintl.com';
+  const email = settings?.email || 'hello@wolvesint.com';
   const address = settings?.address || 'Level 42, Emirates Towers, Sheikh Zayed Road, Dubai, UAE';
 
   return (
@@ -58,7 +60,7 @@ export function ContactPageClient() {
           </h1>
           <p className="mt-10 max-w-xl text-lg text-white/70 leading-relaxed font-light">
             Tell us a little about what you&apos;re looking for. A senior advisor
-            will be in touch within the hour, seven days a week.
+            will connect with you shortly.
           </p>
         </div>
       </section>
@@ -75,7 +77,7 @@ export function ContactPageClient() {
               <div className="mt-12 border p-10 bg-cream" style={{ borderColor: 'var(--gold)' }}>
                 <p className="eyebrow" style={{ color: 'var(--gold-deep)' }}>Message received</p>
                 <h3 className="mt-4 serif text-3xl text-ink">Thank you.</h3>
-                <p className="mt-4 text-muted-foreground">A senior advisor will contact you within the hour.</p>
+                <p className="mt-4 text-muted-foreground">A senior advisor will connect with you shortly.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} className="mt-12 space-y-6">
@@ -128,6 +130,7 @@ export function ContactPageClient() {
               <p className="eyebrow">Speak directly</p>
               <div className="mt-6 space-y-5">
                 <ContactRow icon={HiPhone} label="Call" value={phone} href={`tel:${phone}`} />
+                {tollFree && <ContactRow icon={HiPhone} label="Toll Free" value={tollFree} href={`tel:${tollFree}`} />}
                 <ContactRow icon={FaWhatsapp} label="WhatsApp" value={whatsapp} href={`https://wa.me/${whatsapp}`} />
                 <ContactRow icon={HiMail} label="Email" value={email} href={`mailto:${email}`} />
               </div>
@@ -155,21 +158,32 @@ export function ContactPageClient() {
         </div>
       </section>
 
-      {/* Map placeholder */}
+      {/* Map */}
       <section className="aspect-[21/9] w-full bg-ink relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 30% 40%, oklch(0.75 0.13 82) 0%, transparent 40%), radial-gradient(circle at 70% 60%, oklch(0.28 0.03 260) 0%, transparent 50%)',
-          }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center text-white">
-          <div className="text-center">
-            <HiLocationMarker className="h-10 w-10 mx-auto" style={{ color: 'var(--gold)' }} />
-            <p className="mt-4 serif text-3xl">{address}</p>
-          </div>
-        </div>
+        {isEmbeddableMapsUrl(settings?.google_maps_url) ? (
+          <iframe
+            src={buildMapsEmbedUrl(settings?.google_maps_url || '')}
+            className="absolute inset-0 w-full h-full border-0"
+            loading="lazy"
+            title="Our location"
+          />
+        ) : (
+          <>
+            <div
+              className="absolute inset-0 opacity-30"
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle at 30% 40%, oklch(0.75 0.13 82) 0%, transparent 40%), radial-gradient(circle at 70% 60%, oklch(0.28 0.03 260) 0%, transparent 50%)',
+              }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center text-white">
+              <div className="text-center">
+                <HiLocationMarker className="h-10 w-10 mx-auto" style={{ color: 'var(--gold)' }} />
+                <p className="mt-4 serif text-3xl">{address}</p>
+              </div>
+            </div>
+          </>
+        )}
       </section>
     </div>
   );

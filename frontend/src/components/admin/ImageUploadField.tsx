@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { getMediaUrl } from '@/lib/utils';
+import { compressImage } from '@/lib/imageCompression';
 
 interface Props {
   label: string;
@@ -11,6 +12,7 @@ interface Props {
 
 export function ImageUploadField({ label, file, onChange, existingUrl }: Props) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   useEffect(() => {
     if (!file) { setPreviewUrl(null); return; }
@@ -20,6 +22,16 @@ export function ImageUploadField({ label, file, onChange, existingUrl }: Props) 
   }, [file]);
 
   const displayUrl = previewUrl || (existingUrl ? getMediaUrl(existingUrl) : null);
+
+  const handleFile = async (raw: File | null) => {
+    if (!raw) { onChange(null); return; }
+    setIsCompressing(true);
+    try {
+      onChange(await compressImage(raw));
+    } finally {
+      setIsCompressing(false);
+    }
+  };
 
   return (
     <div>
@@ -32,9 +44,10 @@ export function ImageUploadField({ label, file, onChange, existingUrl }: Props) 
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => onChange(e.target.files?.[0] || null)}
+          onChange={(e) => handleFile(e.target.files?.[0] || null)}
           className="input-luxury text-sm"
         />
+        {isCompressing && <span className="text-xs text-gray-400">Optimizing…</span>}
       </div>
     </div>
   );

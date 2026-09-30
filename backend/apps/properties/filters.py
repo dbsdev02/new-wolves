@@ -3,6 +3,14 @@ from .models import Property
 
 
 class PropertyFilter(django_filters.FilterSet):
+    # property_type is now a JSON list (a property can have more than one
+    # type), so django_filter's auto exact-match generation doesn't apply —
+    # match if the requested type is anywhere in the list. Matching against
+    # the field's raw JSON text is a deliberate simplification: it works
+    # identically across SQLite/MySQL (unlike JSONField's `contains` lookup,
+    # which SQLite doesn't support) and is safe because no TYPE_CHOICES slug
+    # is a substring of another.
+    property_type = django_filters.CharFilter(method='filter_property_type')
     min_price = django_filters.NumberFilter(field_name='price', lookup_expr='gte')
     max_price = django_filters.NumberFilter(field_name='price', lookup_expr='lte')
     min_area = django_filters.NumberFilter(field_name='area_sqft', lookup_expr='gte')
@@ -21,9 +29,12 @@ class PropertyFilter(django_filters.FilterSet):
     is_hot = django_filters.BooleanFilter()
     is_luxury = django_filters.BooleanFilter()
 
+    def filter_property_type(self, queryset, name, value):
+        return queryset.filter(property_type__icontains=value)
+
     class Meta:
         model = Property
         fields = [
-            'property_type', 'purpose', 'status', 'completion_status',
+            'purpose', 'status', 'completion_status',
             'bathrooms', 'currency', 'furnishing',
         ]

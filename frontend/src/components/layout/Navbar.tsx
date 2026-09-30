@@ -3,21 +3,22 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiMenu, HiX, HiPhone, HiChevronDown, HiOutlineHeart, HiOutlineScale } from 'react-icons/hi';
+import { HiMenu, HiX, HiHome, HiChevronDown, HiOutlineHeart } from 'react-icons/hi';
 import { cn } from '@/lib/utils';
 import { usePropertyListStore } from '@/store/propertyListStore';
+import { PropertyCompareIcon } from '@/components/icons/PropertyCompareIcon';
 
 const navLinks = [
   { label: 'Properties', href: '/properties', children: [
-    { label: 'Buy', href: '/properties?purpose=sale' },
-    { label: 'Rent', href: '/properties?purpose=rent' },
     { label: 'Off Plan', href: '/properties?purpose=off_plan' },
+    { label: 'Resale/Ready to Move', href: '/properties?purpose=resale' },
     { label: 'Luxury', href: '/properties?is_luxury=true' },
+    { label: 'Rental', href: '/properties?purpose=rental' },
   ]},
-  { label: 'Projects', href: '/projects' },
+  // { label: 'New Launches', href: '/projects' }, // hidden for now
   { label: 'Developers', href: '/developers' },
   { label: 'Communities', href: '/communities' },
-  { label: 'Agents', href: '/agents' },
+  { label: 'Our Pack', href: '/agents' },
   { label: 'Blog', href: '/blogs' },
   { label: 'Careers', href: '/careers' },
   { label: 'About', href: '/about' },
@@ -59,13 +60,20 @@ export function Navbar() {
     >
       <div className="container-luxe flex items-center justify-between gap-6">
 
-        {/* Logo */}
+        {/* Logo — text wordmark for now, logo image removed */}
         <Link href="/" className="flex-shrink-0">
-          <img
-            src={solid ? '/logo2.png' : '/logo4.png'}
-            alt="Wolves International"
-            className="h-10 w-auto transition-all duration-300"
-          />
+          <span
+            className="transition-colors duration-300 whitespace-nowrap"
+            style={{
+              fontFamily: 'var(--font-cormorant), Georgia, serif',
+              fontSize: '1.5rem',
+              fontWeight: 500,
+              letterSpacing: '0.01em',
+              color: solid ? 'var(--ink)' : '#ffffff',
+            }}
+          >
+            Wolves <span style={{ color: 'var(--gold-deep)' }}>International</span>
+          </span>
         </Link>
 
         {/* Desktop Nav */}
@@ -129,7 +137,7 @@ export function Navbar() {
             style={{ color: solid ? 'var(--ink)' : 'var(--white)' }}
             aria-label="Compare properties"
           >
-            <HiOutlineScale className="w-[18px] h-[18px]" strokeWidth={1.5} />
+            <PropertyCompareIcon className="w-[18px] h-[18px]" strokeWidth={6} />
             {mounted && compare.length > 0 && (
               <span
                 className="absolute -top-1 -right-1 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
@@ -158,15 +166,15 @@ export function Navbar() {
             )}
           </Link>
 
-          {/* Phone */}
-          <a
-            href={`tel:${process.env.NEXT_PUBLIC_PHONE}`}
+          {/* List Your Property */}
+          <Link
+            href="/list-your-property"
             className="hidden xl:flex items-center gap-2 text-[0.65rem] tracking-[0.2em] uppercase font-semibold whitespace-nowrap transition-colors"
             style={{ color: solid ? 'var(--ink)' : 'var(--white)' }}
           >
-            <HiPhone className="w-3.5 h-3.5" />
-            {process.env.NEXT_PUBLIC_PHONE}
-          </a>
+            <HiHome className="w-3.5 h-3.5" />
+            List Your Property
+          </Link>
         </div>
 
         {/* Mobile toggle */}
@@ -226,13 +234,14 @@ export function Navbar() {
                   Compare {mounted && compare.length > 0 && `(${compare.length})`}
                 </Link>
               </div>
-              <a
-                href={`tel:${process.env.NEXT_PUBLIC_PHONE}`}
+              <Link
+                href="/list-your-property"
+                onClick={() => setIsMobileOpen(false)}
                 className="block pt-4 text-sm font-semibold"
                 style={{ color: 'var(--gold-deep)' }}
               >
-                {process.env.NEXT_PUBLIC_PHONE}
-              </a>
+                List Your Property
+              </Link>
             </div>
           </motion.div>
         )}

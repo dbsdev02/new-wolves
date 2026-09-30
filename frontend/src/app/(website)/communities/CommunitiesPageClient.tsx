@@ -13,7 +13,7 @@ export function CommunitiesPageClient() {
         <div className="container-luxe">
           <p className="eyebrow" style={{ color: 'var(--gold-soft)' }}>Explore Dubai</p>
           <h1 className="mt-6 serif text-5xl md:text-7xl leading-[1.02] max-w-3xl">Communities.</h1>
-          <p className="mt-8 text-white/60 max-w-xl leading-relaxed">Discover Dubai&apos;s most sought-after residential communities.</p>
+          <p className="mt-8 text-white/60 max-w-xl leading-relaxed">Discover the UAE&apos;s most sought-after residential communities.</p>
         </div>
       </section>
 

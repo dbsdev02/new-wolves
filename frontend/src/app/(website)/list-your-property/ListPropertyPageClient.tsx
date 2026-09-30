@@ -47,7 +47,7 @@ export function ListPropertyPageClient() {
 
   const phone = settings?.phone || process.env.NEXT_PUBLIC_PHONE || '';
   const whatsapp = settings?.whatsapp || process.env.NEXT_PUBLIC_WHATSAPP || '';
-  const email = settings?.email || 'hello@wolvesintl.com';
+  const email = settings?.email || 'hello@wolvesint.com';
 
   const fieldClass = 'mt-2 w-full bg-transparent border-b border-input py-3 text-ink focus:outline-none focus:border-gold';
   const labelClass = 'text-[0.6rem] tracking-[0.24em] uppercase text-muted-foreground';

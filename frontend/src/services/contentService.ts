@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import type { PaginatedResponse, Developer, Community, Project, Agent, Blog, Testimonial, FAQ, NewsItem, TickerStat } from '@/types';
+import type { PaginatedResponse, Developer, Community, Project, Agent, Blog, BlogCategory, Testimonial, FAQ, NewsItem, TickerStat, GoogleReviews } from '@/types';
 
 export const developerService = {
   getAll: (params?: Record<string, unknown>) => api.get<PaginatedResponse<Developer>>('/developers/', { params }),
@@ -43,7 +43,7 @@ export const blogService = {
   getRelated: (slug: string) => api.get<Blog[]>(`/blogs/${slug}/related/`),
   addComment: (slug: string, data: { name: string; email: string; comment: string }) =>
     api.post(`/blogs/${slug}/add_comment/`, data),
-  getCategories: () => api.get('/blogs/categories/'),
+  getCategories: () => api.get<BlogCategory[]>('/blogs/categories/'),
   getTags: () => api.get('/blogs/tags/'),
   create: (data: FormData) => api.post('/blogs/', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   update: (slug: string, data: FormData) => api.patch(`/blogs/${slug}/`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
@@ -52,6 +52,7 @@ export const blogService = {
 
 export const testimonialService = {
   getAll: () => api.get<Testimonial[]>('/testimonials/'),
+  getGoogleReviews: () => api.get<GoogleReviews>('/testimonials/google-reviews/'),
 };
 
 export const faqService = {

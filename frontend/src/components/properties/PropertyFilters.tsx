@@ -2,14 +2,13 @@
 import { useState } from 'react';
 import type { PropertyFilters } from '@/types';
 import { useCommunities, useDevelopers } from '@/hooks/useContent';
+import { PROPERTY_TYPES, PURPOSES, CITIES } from '@/lib/propertyChoices';
 
 interface Props {
   filters: PropertyFilters;
   onUpdate: (filters: Partial<PropertyFilters>) => void;
 }
-
-const propertyTypes = ['apartment', 'villa', 'townhouse', 'penthouse', 'duplex', 'studio', 'office', 'retail', 'land'];
-const purposes = [{ label: 'For Sale', value: 'sale' }, { label: 'For Rent', value: 'rent' }, { label: 'Off Plan', value: 'off_plan' }];
+const purposes = PURPOSES;
 const completionStatuses = [{ label: 'Ready', value: 'ready' }, { label: 'Off Plan', value: 'off_plan' }, { label: 'Under Construction', value: 'under_construction' }];
 const bedroomOptions = [0, 1, 2, 3, 4, 5];
 
@@ -26,24 +25,39 @@ export function PropertyFilters({ filters, onUpdate }: Props) {
         <h3 className="mt-2 serif text-xl text-ink">Filter Properties</h3>
       </div>
 
-      {/* Location */}
+      {/* Community */}
       <div>
-        <p className="text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground mb-3">Location</p>
+        <p className="text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground mb-3">Communities</p>
         <select
           value={filters.community || ''}
           onChange={(e) => onUpdate({ community: e.target.value || undefined })}
           className={`${fieldClass} appearance-none`}
         >
-          <option value="">All Locations</option>
+          <option value="">All Communities</option>
           {communities?.results?.map((c) => (
             <option key={c.id} value={c.slug}>{c.name}</option>
           ))}
         </select>
       </div>
 
+      {/* City */}
+      <div>
+        <p className="text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground mb-3">City</p>
+        <select
+          value={filters.city || ''}
+          onChange={(e) => onUpdate({ city: e.target.value || undefined })}
+          className={`${fieldClass} appearance-none`}
+        >
+          <option value="">All Cities</option>
+          {CITIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Purpose */}
       <div>
-        <p className="text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground mb-3">Purpose</p>
+        <p className="text-[0.65rem] tracking-[0.2em] uppercase text-muted-foreground mb-3">Property Status</p>
         <div className="space-y-2">
           {[{ label: 'All', value: '' }, ...purposes].map((p) => (
             <label key={p.value || 'all'} className="flex items-center gap-3 cursor-pointer group">
@@ -70,8 +84,8 @@ export function PropertyFilters({ filters, onUpdate }: Props) {
           className={`${fieldClass} appearance-none`}
         >
           <option value="">All Types</option>
-          {propertyTypes.map((t) => (
-            <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+          {PROPERTY_TYPES.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
           ))}
         </select>
       </div>
@@ -166,7 +180,7 @@ export function PropertyFilters({ filters, onUpdate }: Props) {
 
       {/* Clear */}
       <button
-        onClick={() => onUpdate({ purpose: undefined, property_type: undefined, min_price: undefined, max_price: undefined, min_bedrooms: undefined, max_bedrooms: undefined, community: undefined, developer: undefined, completion_status: undefined })}
+        onClick={() => onUpdate({ purpose: undefined, property_type: undefined, min_price: undefined, max_price: undefined, min_bedrooms: undefined, max_bedrooms: undefined, community: undefined, city: undefined, developer: undefined, completion_status: undefined })}
         className="w-full py-3 border border-border text-xs tracking-[0.15em] uppercase text-muted-foreground hover:border-gold hover:text-gold-deep transition-colors"
       >
         Clear All Filters

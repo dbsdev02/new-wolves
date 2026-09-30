@@ -8,6 +8,7 @@ import { FaBed, FaBath } from 'react-icons/fa';
 import { MdSquareFoot } from 'react-icons/md';
 import { cn } from '@/lib/utils';
 import { usePropertyListStore } from '@/store/propertyListStore';
+import { purposeLabel as purposeLabelFor } from '@/lib/propertyChoices';
 import toast from 'react-hot-toast';
 
 interface PropertyCardProps {
@@ -15,11 +16,12 @@ interface PropertyCardProps {
   className?: string;
 }
 
-const purposeLabel = (p: Property) =>
-  p.purpose === 'sale' ? 'For Sale' : p.purpose === 'rent' ? 'For Rent' : 'Off Plan';
+const purposeLabel = (p: Property) => purposeLabelFor(p.purpose);
 
 export function PropertyCard({ property, className }: PropertyCardProps) {
-  const image = property.primary_image || property.featured_image;
+  // featured_image is the deliberately-chosen hero shot — it should win over
+  // whatever happens to be first/primary in the gallery.
+  const image = property.featured_image || property.primary_image;
   const bedroomLabel = formatBedroomRange(property.min_bedrooms, property.max_bedrooms);
   const { isWishlisted, toggleWishlist, isComparing, toggleCompare, compare } = usePropertyListStore();
   const wishlisted = isWishlisted(property.slug);
@@ -31,8 +33,7 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
     toast.success(wishlisted ? 'Removed from wishlist' : 'Added to wishlist');
   };
 
-  const handleCompare = (e: React.MouseEvent) => {
-    e.preventDefault(); e.stopPropagation();
+  const handleCompare = () => {
     if (!comparing && compare.length >= 4) {
       toast.error('You can compare up to 4 properties at a time.');
       return;
@@ -85,9 +86,11 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
 
         {/* Bottom info */}
         <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-          <p className="eyebrow mb-1.5" style={{ color: 'var(--gold-soft)' }}>
-            {property.community_name || property.city}
-          </p>
+          {property.community_name && (
+            <p className="eyebrow mb-1.5" style={{ color: 'var(--gold-soft)' }}>
+              {property.community_name}
+            </p>
+          )}
           <h3
             className="leading-tight line-clamp-1"
             style={{
@@ -134,10 +137,10 @@ export function PropertyCard({ property, className }: PropertyCardProps) {
             <input
               type="checkbox"
               checked={comparing}
-              onClick={handleCompare}
+              onChange={handleCompare}
+              onClick={(e) => e.stopPropagation()}
               className="w-3 h-3 cursor-pointer"
               style={{ accentColor: 'var(--gold-deep)' }}
-              readOnly
             />
             Compare
           </label>

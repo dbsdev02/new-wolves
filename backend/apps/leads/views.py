@@ -36,10 +36,14 @@ class LeadViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         lead = serializer.save()
-        # Send notification email (async in production)
-        from .tasks import send_lead_notification
+        # Send notification email + forward to Zapier (async in production)
+        from .tasks import send_lead_notification, send_lead_to_zapier
         try:
             send_lead_notification(lead.id)
+        except Exception:
+            pass
+        try:
+            send_lead_to_zapier(lead.id)
         except Exception:
             pass
         return Response({'message': 'Thank you! We will contact you shortly.'}, status=status.HTTP_201_CREATED)

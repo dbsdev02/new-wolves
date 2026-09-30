@@ -78,7 +78,7 @@ Django Admin: http://localhost:8000/admin/
 
 ### Demo Data
 
-`python manage.py seed_demo_data` creates a superuser (`admin@wolvesintl.com` / `Admin@12345`), 8 communities, 5 developers, 8 agents, 40 properties, 10 off-plan projects, 10 blog posts, testimonials, FAQs, and site settings. It is idempotent — safe to re-run. Pass `--flush` to wipe and reseed.
+`python manage.py seed_demo_data` creates a superuser (`admin@wolvesint.com` / `Admin@12345`), 8 communities, 5 developers, 8 agents, 40 properties, 10 off-plan projects, 10 blog posts, testimonials, FAQs, and site settings. It is idempotent — safe to re-run. Pass `--flush` to wipe and reseed.
 
 ### Running Tests
 

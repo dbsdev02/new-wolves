@@ -12,6 +12,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'backend.wolvesint.org' },
       { protocol: 'https', hostname: 'new.wolvesint.ae' },
     ],
+    unoptimized: true, // Disable Next.js image optimization (faster on cPanel)
   },
   async rewrites() {
     return [
@@ -27,6 +28,15 @@ const nextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+      {
+        // Only hashed build assets (filename changes every build) are safe
+        // to cache for a year — caching page/API routes this way makes
+        // redeploys invisible to returning visitors until they hard-refresh.
+        source: '/_next/static/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
     ];

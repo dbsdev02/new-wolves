@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { HiSparkles } from 'react-icons/hi';
 
 export function QuizSection() {
@@ -34,9 +35,9 @@ export function QuizSection() {
             </p>
 
             <div className="mt-10 flex flex-wrap items-center gap-5">
-              <a href="/contact" className="btn-gold">
+              <Link href="/contact" className="btn-gold">
                 <HiSparkles className="h-4 w-4" /> Start the quiz
-              </a>
+              </Link>
               <span className="text-[0.65rem] tracking-[0.22em] uppercase" style={{ color: 'rgba(255,255,255,0.4)' }}>
                 Takes only 30 seconds
               </span>

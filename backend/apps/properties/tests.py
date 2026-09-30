@@ -10,7 +10,7 @@ User = get_user_model()
 def make_property(**kwargs):
     defaults = dict(
         title='Test Property', description='A lovely test property.',
-        property_type='apartment', purpose='sale', status='published',
+        property_type=['apartment'], purpose='sale', status='published',
         price=1000000, address='Test Address', city='Dubai',
         min_bedrooms=2, max_bedrooms=2, bathrooms=2, area_sqft=1200,
     )

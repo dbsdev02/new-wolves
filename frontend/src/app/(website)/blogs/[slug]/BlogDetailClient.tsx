@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useBlog } from '@/hooks/useContent';
-import { getMediaUrl } from '@/lib/utils';
+import { getMediaUrl, formatBlogContent } from '@/lib/utils';
 import { HiClock, HiEye, HiShare } from 'react-icons/hi';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
@@ -76,8 +76,8 @@ export function BlogDetailClient({ slug }: Props) {
         {/* Content */}
         <div className="mb-16">
           <div
-            className="prose prose-lg max-w-none text-muted-foreground leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: blog.content }}
+            className="prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: formatBlogContent(blog.content) }}
           />
 
           {blog.tags && blog.tags.length > 0 && (

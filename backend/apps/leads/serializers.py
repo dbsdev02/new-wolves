@@ -3,6 +3,10 @@ from .models import Lead
 
 
 class LeadCreateSerializer(serializers.ModelSerializer):
+    # Lightweight funnels (e.g. gated report/brochure downloads) only collect a
+    # name and phone number, so email is not mandatory here.
+    email = serializers.EmailField(required=False, allow_blank=True)
+
     class Meta:
         model = Lead
         fields = [

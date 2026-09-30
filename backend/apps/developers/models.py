@@ -16,6 +16,7 @@ class Developer(models.Model):
     total_units = models.PositiveIntegerField(default=0)
     is_featured = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0, help_text='Lower numbers show first. Use this to prioritize which developers appear first across the site.')
 
     # SEO
     meta_title = models.CharField(max_length=255, blank=True)
@@ -26,7 +27,7 @@ class Developer(models.Model):
 
     class Meta:
         db_table = 'developers'
-        ordering = ['name']
+        ordering = ['order', 'name']
 
     def __str__(self):
         return self.name

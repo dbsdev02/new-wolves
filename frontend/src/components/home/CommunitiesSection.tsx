@@ -2,14 +2,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { HiArrowRight } from 'react-icons/hi';
-import { useFeaturedCommunities, useCommunities } from '@/hooks/useContent';
+import { useCommunities } from '@/hooks/useContent';
 import { getMediaUrl } from '@/lib/utils';
 
 export function CommunitiesSection() {
-  const { data: featured, isLoading } = useFeaturedCommunities();
-  const { data: all } = useCommunities({ page_size: 20 });
-  const communities = featured || [];
-  const allCommunities = all?.results || [];
+  const { data, isLoading } = useCommunities({ page_size: 20 });
+  const communities = data?.results || [];
 
   return (
     <section className="py-24 md:py-32" style={{ background: 'var(--white)' }}>
@@ -32,21 +30,20 @@ export function CommunitiesSection() {
           </Link>
         </div>
 
-        {/* Featured grid */}
         {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-3 mb-16">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] animate-pulse" style={{ background: 'var(--cream-dark)' }} />
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-[4/3] animate-pulse" style={{ background: 'var(--cream-dark)' }} />
             ))}
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-3 mb-16">
-            {communities.slice(0, 3).map((c, i) => (
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+            {communities.slice(0, 8).map((c) => (
               <Link
                 key={c.id}
                 href={`/properties?community=${c.slug}`}
-                className={`group relative overflow-hidden ${i === 0 ? 'md:row-span-2' : ''}`}
-                style={{ aspectRatio: i === 0 ? '3/4' : '4/3' }}
+                className="group relative overflow-hidden"
+                style={{ aspectRatio: '4/3' }}
               >
                 <Image
                   src={getMediaUrl(c.image)}
@@ -54,51 +51,32 @@ export function CommunitiesSection() {
                   fill
                   loading="lazy"
                   className="object-cover transition-transform duration-[1200ms] group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, 33vw"
+                  sizes="(max-width: 768px) 50vw, 25vw"
                 />
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,2,25,0.75) 0%, rgba(0,2,25,0.1) 60%, transparent 100%)' }} />
-                <div className="absolute inset-0 flex flex-col justify-end p-7 text-white">
-                  <p className="eyebrow mb-2" style={{ color: 'var(--gold-soft)' }}>
+                <div className="absolute inset-0 flex flex-col justify-end p-5 text-white">
+                  <p className="eyebrow mb-1.5" style={{ color: 'var(--gold-soft)' }}>
                     {c.total_properties} residences
                   </p>
                   <h3 style={{
                     fontFamily: 'var(--font-cormorant), Georgia, serif',
-                    fontSize: i === 0 ? '2rem' : '1.5rem',
+                    fontSize: '1.25rem',
                     fontWeight: 300,
                     lineHeight: 1.1,
                   }}>
                     {c.name}
                   </h3>
-                  <div
-                    className="mt-4 h-px transition-all duration-500 group-hover:w-12"
-                    style={{ width: '24px', background: 'var(--gold)' }}
-                  />
                 </div>
               </Link>
             ))}
           </div>
         )}
 
-        {/* All communities list */}
-        {allCommunities.length > 0 && (
-          <div className="pt-10 border-t" style={{ borderColor: 'var(--border)' }}>
-            <p className="eyebrow mb-8 text-center">All Communities</p>
-            <div className="grid gap-x-8 gap-y-0 md:grid-cols-2 lg:grid-cols-4">
-              {allCommunities.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/properties?community=${c.slug}`}
-                  className="group flex items-center justify-between py-3.5 border-b text-sm font-medium transition-colors"
-                  style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
-                >
-                  <span className="group-hover:text-[var(--gold-deep)] transition-colors">{c.name}</span>
-                  <HiArrowRight
-                    className="h-3.5 w-3.5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
-                    style={{ color: 'var(--gold)' }}
-                  />
-                </Link>
-              ))}
-            </div>
+        {communities.length > 8 && (
+          <div className="mt-10 text-center">
+            <Link href="/communities" className="btn-gold">
+              View All Communities
+            </Link>
           </div>
         )}
       </div>

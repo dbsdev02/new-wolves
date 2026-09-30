@@ -21,9 +21,14 @@ export function NewsTicker() {
           <div className="relative z-10 flex items-center bg-ink text-white pl-6 pr-8" style={{ clipPath: 'polygon(0 0, 100% 0, 85% 100%, 0 100%)' }}>
             <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: 'var(--gold-soft)' }}>News</span>
           </div>
-          <div className="absolute right-0 top-0 bottom-0 w-24 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, var(--white), transparent)' }} />
-          <div className="flex items-center overflow-hidden py-3">
-            <div className="flex items-center gap-3 whitespace-nowrap animate-marquee pl-6">
+          <div className="absolute right-0 top-0 bottom-0 w-8 md:w-24 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, var(--white), transparent)' }} />
+          {/* min-w-0 is load-bearing: without it, this flex item's overflow-hidden
+              doesn't actually clip — a flex child's default min-width is `auto`,
+              so the browser sizes it to the nowrap track's full intrinsic width
+              (all headlines concatenated) instead of the available row space,
+              pushing the row (and the page) wider than the viewport on mobile. */}
+          <div className="flex items-center overflow-hidden py-3 min-w-0 flex-1">
+            <div className="flex items-center gap-3 whitespace-nowrap animate-marquee-ticker-mobile md:animate-marquee pl-6">
               {marqueeItems.map((item, i) => (
                 <span key={i} className="flex items-center gap-3">
                   {item.link ? (

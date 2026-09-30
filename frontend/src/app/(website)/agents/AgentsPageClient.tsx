@@ -7,7 +7,7 @@ import { HiPhone } from 'react-icons/hi';
 import { FaWhatsapp } from 'react-icons/fa';
 
 export function AgentsPageClient() {
-  const { data, isLoading } = useAgents();
+  const { data, isLoading } = useAgents({ page_size: 100 });
 
   return (
     <div className="bg-background">
@@ -31,7 +31,7 @@ export function AgentsPageClient() {
                 <Link href={`/agents/${agent.id}`} className="block">
                   <div className="relative aspect-[3/4] overflow-hidden bg-muted">
                     {agent.photo ? (
-                      <Image src={getMediaUrl(agent.photo)} alt={`${agent.first_name} ${agent.last_name}`} fill className="object-cover object-top grayscale group-hover:grayscale-0 transition-all duration-1000" sizes="300px" />
+                      <Image src={getMediaUrl(agent.photo)} alt={`${agent.first_name} ${agent.last_name}`} fill className="object-cover object-top transition-all duration-1000" sizes="300px" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-ink">
                         <span className="serif text-5xl text-white">{agent.first_name[0]}</span>
@@ -42,9 +42,14 @@ export function AgentsPageClient() {
                   <p className="text-xs tracking-[0.2em] uppercase text-gold-deep mt-1">{agent.designation}</p>
                 </Link>
                 <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                  <span>{agent.experience_years}+ yrs</span>
-                  <span>{agent.total_properties} properties</span>
+                  {/* <span>{agent.experience_years}+ yrs</span> */}
+                  {agent.total_properties > 0 && (
+                    <span>{agent.total_properties} properties</span>
+                  )}
                 </div>
+                {agent.languages && (
+                  <p className="mt-1 text-xs text-muted-foreground">{agent.languages}</p>
+                )}
                 <div className="flex items-center gap-2 mt-4">
                   <a href={`tel:${agent.phone}`} className="flex-1 flex items-center justify-center gap-1 py-2 border border-border hover:border-gold transition-colors text-xs">
                     <HiPhone className="w-3 h-3" /> Call

@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
+from django.utils.decorators import method_decorator
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Blog, BlogCategory, BlogTag, BlogComment
@@ -10,6 +11,7 @@ from .serializers import (
     BlogCategorySerializer, BlogTagSerializer, BlogCommentSerializer
 )
 from apps.users.permissions import IsEditorOrAbove
+from config.cache import public_cache_page
 
 
 class BlogViewSet(viewsets.ModelViewSet):
@@ -45,6 +47,7 @@ class BlogViewSet(viewsets.ModelViewSet):
         return Response(BlogDetailSerializer(instance, context={'request': request}).data)
 
     @action(detail=False, methods=['get'])
+    @method_decorator(public_cache_page(60))
     def featured(self, request):
         qs = self.get_queryset().filter(is_featured=True, status='published')[:6]
         return Response(BlogListSerializer(qs, many=True, context={'request': request}).data)
@@ -59,6 +62,7 @@ class BlogViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['get'])
+    @method_decorator(public_cache_page(60))
     def related(self, request, slug=None):
         blog = self.get_object()
         related = Blog.objects.filter(status='published', category=blog.category).exclude(id=blog.id)[:4]

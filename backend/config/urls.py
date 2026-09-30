@@ -1,8 +1,9 @@
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
-from django.views.static import serve
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+
+from .media_views import cached_serve
 
 api_v1 = [
     path('auth/', include('apps.users.urls')),
@@ -28,5 +29,5 @@ urlpatterns = [
     path('api/v1/', include(api_v1)),
     # Served unconditionally (not gated by DEBUG) — cPanel/Passenger hosting
     # has no separate web server in front serving /media/, so Django has to.
-    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    re_path(r'^media/(?P<path>.*)$', cached_serve, {'document_root': settings.MEDIA_ROOT}),
 ]

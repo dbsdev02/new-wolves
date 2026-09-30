@@ -24,6 +24,7 @@ export function PropertiesPageClient() {
     purpose: searchParams.get('purpose') || undefined,
     property_type: searchParams.get('property_type') || undefined,
     community: searchParams.get('community') || undefined,
+    city: searchParams.get('city') || undefined,
     developer: searchParams.get('developer') || undefined,
     min_price: searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined,
     max_price: searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined,
@@ -45,7 +46,10 @@ export function PropertiesPageClient() {
   }, [searchParams]);
 
   const updateFilters = (newFilters: Partial<Filters>) => {
-    const updated = { ...filters, ...newFilters, page: 1 };
+    // Pagination clicks pass page explicitly and must win; any other filter
+    // change (community, price, sort, etc.) doesn't pass page and should
+    // reset back to page 1 since the result set is changing underneath it.
+    const updated = { ...filters, ...newFilters, page: newFilters.page ?? 1 };
     setFilters(updated);
     const params = new URLSearchParams();
     Object.entries(updated).forEach(([k, v]) => {

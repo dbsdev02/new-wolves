@@ -53,7 +53,22 @@ module.exports = {
         'reveal': 'revealUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) both',
         'reveal-fade': 'revealFade 1.4s ease-out both',
         'slow-zoom': 'slowZoom 12s ease-out both',
+        // Used by the News Ticker's desktop speed — left as-is, only the
+        // developer marquee's desktop pace was asked to speed up.
         'marquee': 'marquee 40s linear infinite',
+        // Developer logo marquee's own desktop speed (separate from the
+        // ticker's `marquee` above, so changing this doesn't also change
+        // the ticker). Slowed back down from 18s per request.
+        'marquee-fast': 'marquee 30s linear infinite',
+        // Developer logo marquee's mobile speed. 4s cycled all 17 logos so
+        // fast individual ones couldn't actually be registered — reads as
+        // "not showing all" even though every logo is in the DOM and does
+        // scroll past. Slowed down enough to actually perceive each one.
+        'marquee-mobile': 'marquee 12s linear infinite',
+        // News Ticker's mobile speed — this is read text, not glanced-at
+        // icons, so it needs to stay slow enough to actually read. Separate
+        // from marquee-mobile above so the two can be tuned independently.
+        'marquee-ticker-mobile': 'marquee 25s linear infinite',
       },
       keyframes: {
         fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
@@ -75,7 +90,25 @@ module.exports = {
       backdropBlur: {
         xs: '2px',
       },
+      typography: () => ({
+        DEFAULT: {
+          css: {
+            '--tw-prose-body': '#737575',
+            '--tw-prose-headings': '#000219',
+            '--tw-prose-links': '#CDA773',
+            '--tw-prose-bold': '#000219',
+            '--tw-prose-bullets': '#E1B77E',
+            '--tw-prose-quotes': '#000219',
+            '--tw-prose-quote-borders': '#E1B77E',
+            '--tw-prose-hr': '#EEEEEE',
+            maxWidth: 'none',
+            a: { textDecoration: 'none', fontWeight: '500' },
+            'a:hover': { textDecoration: 'underline' },
+            'h1, h2, h3, h4': { fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: '600' },
+          },
+        },
+      }),
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
 };

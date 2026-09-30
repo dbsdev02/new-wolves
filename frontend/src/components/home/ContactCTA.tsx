@@ -35,7 +35,7 @@ export function ContactCTA() {
 
   const phone = settings?.phone || process.env.NEXT_PUBLIC_PHONE || '';
   const whatsapp = settings?.whatsapp || process.env.NEXT_PUBLIC_WHATSAPP || '';
-  const email = settings?.email || 'hello@wolvesintl.com';
+  const email = settings?.email || 'hello@wolvesint.com';
 
   const contacts = [
     { icon: FaWhatsapp, label: 'WhatsApp', value: 'Click to chat', href: `https://wa.me/${whatsapp}` },

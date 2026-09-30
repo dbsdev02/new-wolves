@@ -57,8 +57,6 @@ export function AgentDetailClient({ id }: Props) {
               {agent.rera_number && <p className="text-white/50 text-sm mt-2">RERA: {agent.rera_number}</p>}
               <div className="flex flex-wrap justify-center md:justify-start items-center gap-6 mt-5 text-sm text-white/70">
                 <span>{agent.experience_years}+ Years Experience</span>
-                <span>{agent.total_properties} Properties</span>
-                <span>{agent.total_deals} Deals Closed</span>
               </div>
               <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 mt-6">
                 <a href={`tel:${agent.phone}`} className="btn-gold"><HiPhone className="w-4 h-4" /> Call</a>
